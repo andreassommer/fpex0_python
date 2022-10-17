@@ -1,3 +1,32 @@
 [build-system]
 requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "fpex0_python"
+version = "1.0.4a1"
+authors = [
+    {name="Michael Strik", email="michael.strik@stud.uni-heidelberg.de"}
+    ]
+maintainers = [
+    {name="Andreas Sommer", email="code@andreas-sommer.eu"}
+    ]
+license = {text="MIT License"}
+description = "This package is an implementation of the FPEX0 algorithm, a data-driven de-smearing method for DSC signals."
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers=[
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "scipy",
+    "numpy",
+    "sympy",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+example_package_michaelstrik = ["*.json", "*.csv"]
