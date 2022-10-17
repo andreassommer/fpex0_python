@@ -1,0 +1,8 @@
+.vscode/*
+*.asv
+*~
+*.pyc
+*.whl
+
+# local files
+test.py
