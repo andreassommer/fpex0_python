@@ -2,10 +2,10 @@ name: Package ci-cd
 
 on:
   push:
-    branches: ["master"]
+    branches: ["main"]
     tags:
     - 'v*'
-    # runs both on pushes tag-pushes to master
+    # runs both on pushes and tag-pushes to main
   workflow_dispatch:
 
 
