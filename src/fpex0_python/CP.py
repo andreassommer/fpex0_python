@@ -2,14 +2,14 @@ from scipy import interpolate
 from numpy.polynomial import Polynomial
 import numpy as np
 
-from fpex0_python.process.baseline import getBaseline
-from fpex0_python.process.baseline import subtractBaseline
+from fpex0_python.baseline import getBaseline
+from fpex0_python.baseline import subtractBaseline
 
 
 
 class HeatCapacity():
    """
-   Stores cp, usually calculated by fpex0_python.process.CP.addCP().
+   Stores cp, usually calculated by fpex0_python.CP.addCP().
    
    ## Parameters
    **T**: Temperatures
@@ -55,7 +55,7 @@ def CP_DIN11357(T, mS, dscS, cpR, mR, dscR, dsc0=0):
    
    **dscS**: DSC signal of sample (microvolts)
    
-   **cpR**: cp-values of reference (cf. fpex0_python.process.CP_sapphire_DIN11357())
+   **cpR**: cp-values of reference (cf. fpex0_python.CP_sapphire_DIN11357())
    
    **mR**: Mass of reference
 

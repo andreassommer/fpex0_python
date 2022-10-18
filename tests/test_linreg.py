@@ -1,5 +1,5 @@
 import numpy as np
-from fpex0_python.process import linreg
+from fpex0_python import LinearRegression
 
 # Test module: pytest
 
@@ -7,7 +7,7 @@ def test_LinReg():
     
     X = np.array([1, 2, 3, 4])
     Y = np.array([1, 3, 4, 8])
-    reg = linreg.LinearRegression()
+    reg = LinearRegression()
     
     # initial regression
     reg.linReg(X, Y)

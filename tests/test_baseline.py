@@ -1,14 +1,14 @@
-from fpex0_python.process.baseline import clearZeroFromMax
+from fpex0_python import clearZeroFromMax
 import numpy as np
-from fpex0_python.process import getBaselinePrimitive
-from fpex0_python.process import detectLinearRange
-from fpex0_python.process import getBaseline
+from fpex0_python import getBaselinePrimitive
+from fpex0_python import detectLinearRange
+from fpex0_python import getBaseline
 
 
 def test_detectLinearRange():
     # copy inputs from matlab run
-    Y = np.genfromtxt("test-data/y.csv", delimiter=",")
-    X = np.genfromtxt("test-data/x.csv", delimiter=",")
+    Y = np.genfromtxt("tests/test-data/y.csv", delimiter=",")
+    X = np.genfromtxt("tests/test-data/x.csv", delimiter=",")
     
     # left side
     side        = 'left'
@@ -80,8 +80,8 @@ def test_detectLinearRange():
 
 def test_getBaselinePrimitive():
     # passes
-    Y = np.genfromtxt("test-data/y.csv", delimiter=",")
-    X = np.genfromtxt("test-data/x.csv", delimiter=",")
+    Y = np.genfromtxt("tests/test-data/y.csv", delimiter=",")
+    X = np.genfromtxt("tests/test-data/x.csv", delimiter=",")
     index_l = 406
     icept_l = 4.096477703307445
     slope_l = 0.021119427883772
@@ -95,7 +95,7 @@ def test_getBaselinePrimitive():
     blSigmoidal = getBaselinePrimitive(X, Y, index_l, icept_l, slope_l, index_r, icept_r, slope_r, bl_type, res)
     X_test = np.linspace(90, 155, 101)  # 101 for good step size
     Y_test = blSigmoidal(X_test)
-    Y_test_matlab = np.genfromtxt("test-data/Y_getBaselinePrimitive_sigeval.csv", delimiter=",")
+    Y_test_matlab = np.genfromtxt("tests/test-data/Y_getBaselinePrimitive_sigeval.csv", delimiter=",")
     assert (Y_test - Y_test_matlab < 10e-13).all()
 
     bl_type = "linear"
@@ -103,13 +103,13 @@ def test_getBaselinePrimitive():
     X_test = np.linspace(92, 155, 101)
     # make the range smaller here, because pp linear scipy interpolator can't evaluate out of interpolation range
     Y_test = blLinear(X_test)
-    Y_test_matlab = np.genfromtxt("test-data/Y_getBaselinePrimitive_lineval.csv", delimiter=",")
+    Y_test_matlab = np.genfromtxt("tests/test-data/Y_getBaselinePrimitive_lineval.csv", delimiter=",")
     assert (Y_test - Y_test_matlab < 10e-13).all()
 
 
 def test_getBaseline():
-    X = np.genfromtxt("test-data/x.csv", delimiter = ",")
-    Y = np.genfromtxt("test-data/y.csv", delimiter = ",")
+    X = np.genfromtxt("tests/test-data/x.csv", delimiter = ",")
+    Y = np.genfromtxt("tests/test-data/y.csv", delimiter = ",")
 
     blfun, bldata = getBaseline(X, Y, bl_type='linear')
     
@@ -145,7 +145,7 @@ def test_getBaseline():
     
     # blfun
     X_test = np.linspace(92, 156, 101)
-    Y_getBaseline_lineval = np.genfromtxt("test-data/Y_getBaseline_lineval.csv", delimiter=",")
+    Y_getBaseline_lineval = np.genfromtxt("tests/test-data/Y_getBaseline_lineval.csv", delimiter=",")
     assert(( blfun(X_test) - Y_getBaseline_lineval < 10e-13 ).all())
     
     
@@ -164,7 +164,7 @@ def test_getBaseline():
     # --> Regressions are built the same way, don't need to test again 
     
     # blfun
-    Y_getBaseline_sigeval = np.genfromtxt("test-data/Y_getBaseline_sigeval.csv", delimiter=",")
+    Y_getBaseline_sigeval = np.genfromtxt("tests/test-data/Y_getBaseline_sigeval.csv", delimiter=",")
     assert(( blfun(X_test) - Y_getBaseline_sigeval < 10e-13 ).all())
 
     # check if vectorized version runs

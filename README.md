@@ -45,7 +45,7 @@ Please also read about sympy symbolic functions if not familiar.
 ## Data processing
 
 The functions described above assume **baseline corrected** data, so raw measurements must be processed.
-The subpackage fpex0.process can do that for you. <br>
+The modules CP, baseline can do that for you. <br>
 The processing consists of two parts: (1) calculating heat capacities, (2) detecting a baseline and
 subtracting it. 
 Both of it is done by addCP() plus some previous data preparation. As there is no code example, we

@@ -28,7 +28,7 @@ class DSC_Data:
     <br> Information about the baselevel.
     
     **blfun** 
-    <br> Baselevel function as retrieved by `fpex0_python.process.baseline.getBaseline`.
+    <br> Baselevel function as retrieved by `fpex0_python.baseline.getBaseline`.
     
     **cp** 
     <br> Calculated heat capacities as HeatCapacitiy member.

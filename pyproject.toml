@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fpex0_python"
-version = "1.0.4a1"
+version = "1.0.4a2"
 authors = [
     {name="Michael Strik", email="michael.strik@stud.uni-heidelberg.de"}
     ]
