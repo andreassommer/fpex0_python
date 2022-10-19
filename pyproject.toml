@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fpex0_python"
-version = "1.0.4a2"
+version = "1.0.4a3"
 authors = [
     {name="Michael Strik", email="michael.strik@stud.uni-heidelberg.de"}
     ]
@@ -16,6 +16,7 @@ description = "This package is an implementation of the FPEX0 algorithm, a data-
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers=[
+    "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
 ]
@@ -25,8 +26,8 @@ dependencies = [
     "sympy",
 ]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.setuptools]
+packages = ["fpex0_python", "fpex0_python.example"]
 
 [tool.setuptools.package-data]
-fpex0_python = ["*.json", "*.csv"]
+'fpex0_python.example' = ["*.json"]
