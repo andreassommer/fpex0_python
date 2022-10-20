@@ -3,6 +3,7 @@
 *~
 *.pyc
 *.whl
+.venv/*
 
 # local files
 test.py
