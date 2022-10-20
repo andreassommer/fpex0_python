@@ -3,11 +3,11 @@ import json
 import numpy as np
 import sympy
 
-from fpex0_python.setup import Setup, Parameters, Grid, Integration
-from fpex0_python import FokkerPlanck
-# from fpex0_python.default import defaultDiffusionFcn, defaultDriftFcn
+from fpex0.setup import Setup, Parameters, Grid, Integration
+from fpex0 import FokkerPlanck
+# from fpex0.default import defaultDiffusionFcn, defaultDriftFcn
 
-from fpex0_python.InitialDistribution import InitialDistribution
+from fpex0.InitialDistribution import InitialDistribution
 
 
 def exampleSetup():
@@ -19,7 +19,7 @@ def exampleSetup():
 
     ## Returns
     **setup** 
-    <br> An FPEX0 setup configuration (`fpex0_python.setup.Setup`) example.
+    <br> An FPEX0 setup configuration (`fpex0.setup.Setup`) example.
     <br>
     
     ### Comments
@@ -97,7 +97,7 @@ def importExampleMeasurements(FPEX0setup, gridskip: int):
 
     ## Takes
     **FPEX0setup**
-    <br> An FPEX0 setup configuration (`fpex0_python.setup.Setup`).
+    <br> An FPEX0 setup configuration (`fpex0.setup.Setup`).
 
     **gridskip**
     <br> Use grid with given stepsize (gridskip). 
@@ -110,7 +110,7 @@ def importExampleMeasurements(FPEX0setup, gridskip: int):
     
     """
     for rate in ["0.60", "1.25", "2.50", "5.00", "10.00", "20.00"]:
-        path = resources.path('fpex0_python.example', f'ID407-rate_{rate}.json')
+        path = resources.path('fpex0.example', f'ID407-rate_{rate}.json')
         print(f"Absolute example data path is {path}.")
         file = open(path)
         data = json.load(file)

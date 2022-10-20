@@ -1,8 +1,8 @@
 import numpy as np
 import copy
 
-from fpex0_python import DSC_Data
-from fpex0_python import addCP
+from fpex0 import DSC_Data
+from fpex0 import addCP
 
 def test_addCP():
 

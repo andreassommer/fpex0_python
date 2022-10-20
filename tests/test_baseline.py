@@ -1,8 +1,8 @@
-from fpex0_python import clearZeroFromMax
+from fpex0 import clearZeroFromMax
 import numpy as np
-from fpex0_python import getBaselinePrimitive
-from fpex0_python import detectLinearRange
-from fpex0_python import getBaseline
+from fpex0 import getBaselinePrimitive
+from fpex0 import detectLinearRange
+from fpex0 import getBaseline
 
 
 def test_detectLinearRange():

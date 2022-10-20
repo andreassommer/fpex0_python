@@ -1,5 +1,5 @@
 import numpy as np
-from fpex0_python import LinearRegression
+from fpex0 import LinearRegression
 
 # Test module: pytest
 

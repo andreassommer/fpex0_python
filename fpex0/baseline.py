@@ -2,7 +2,7 @@ import numpy as np
 from scipy import interpolate
 from scipy import integrate
 from copy import copy
-from fpex0_python.linreg import LinearRegression
+from fpex0.linreg import LinearRegression
 
 
 class BaselineData:
@@ -30,7 +30,7 @@ class BaselineData:
 
 class BaselineDetectionSettings:
     """
-    Stores (default) baseline detection settings to be passed to `fpex0_python.baseline.detectLinearRange()`.
+    Stores (default) baseline detection settings to be passed to `fpex0.baseline.detectLinearRange()`.
     
     ## Parameters
     Naming: 
@@ -108,10 +108,10 @@ def detectLinearRange(X, Y, side, initlen, reldevAmax, reldevBmax, reldevS2max, 
     <br> Position in X, where the linear range is estimated to be left.
      
     **reg**
-    <br> Final regression structure as returned by fpex0_python.linreg.LinearRegression.linReg.
+    <br> Final regression structure as returned by fpex0.linreg.LinearRegression.linReg.
      
     **initreg**
-    <br> Initial regression structure as returned by fpex0_python.linreg.LinearRegression.linReg.
+    <br> Initial regression structure as returned by fpex0.linreg.LinearRegression.linReg.
  
     ### Comments
      * Set the `reldev` to inf to disable

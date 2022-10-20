@@ -1,5 +1,5 @@
-from fpex0_python import fpex0
-from fpex0_python.example.exampleSetup import exampleSetup, importExampleMeasurements
+from fpex0 import fpex0
+from fpex0.example.exampleSetup import exampleSetup, importExampleMeasurements
 
 import time
 
@@ -7,8 +7,8 @@ import time
 def exampleFit():
     """
     Runs an example fit with:
-    - An example fpex0 setup configuration, retrieved by `fpex0_python.example.exampleSetup.exampleSetup()` (check for details)
-    - Example data, contained in the fpex0_python/example/ID407-rate_*.json files
+    - An example fpex0 setup configuration, retrieved by `fpex0.example.exampleSetup.exampleSetup()` (check for details)
+    - Example data, contained in the fpex0/example/ID407-rate_*.json files
     - A Fraser-Suzuki initial distribution
     - The scipy solve_ivp BDF integrator to solve the Fokker Planck equation
     - The scipy least_squares optimizer to fit the example measurements

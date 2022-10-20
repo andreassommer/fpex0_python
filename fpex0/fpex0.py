@@ -12,7 +12,7 @@ def simulate(FPEX0setup, pvec, odeoptions={}, method="BDF"):
 
     ## Takes
     **FPEX0setup**
-    <br> An FPEX0 setup configuration (`fpex0_python.setup.Setup`).
+    <br> An FPEX0 setup configuration (`fpex0.setup.Setup`).
 
     **p_all**
     <br> Vector of parameters, coupled to FPEX0setup.
@@ -89,7 +89,7 @@ def fit(FPEX0setup, optimizer='lsq'):
 
     ## Takes
     **FPEX0setup**
-    <br> An FPEX0 setup configuration (`fpex0_python.setup.Setup`).
+    <br> An FPEX0 setup configuration (`fpex0.setup.Setup`).
 
     **optimizer**
     <br> The optimizer that should be used. So far only least squares is implemented.
@@ -139,7 +139,7 @@ def residual(FPEX0setup, p_all):
     
     ## Takes
     **FPEX0setup**
-    <br> An FPEX0 setup configuration (`fpex0_python.setup.Setup`).
+    <br> An FPEX0 setup configuration (`fpex0.setup.Setup`).
 
     **p_all**
     <br> Vector of parameters, coupled to FPEX0setup.

@@ -28,7 +28,7 @@ class DSC_Data:
     <br> Information about the baselevel.
     
     **blfun** 
-    <br> Baselevel function as retrieved by `fpex0_python.baseline.getBaseline`.
+    <br> Baselevel function as retrieved by `fpex0.baseline.getBaseline`.
     
     **cp** 
     <br> Calculated heat capacities as HeatCapacitiy member.
@@ -52,15 +52,15 @@ class Setup:
     """
     FPEX0 configuration.
 
-    ## Parameters : `fpex0_python.setup.Grid`
+    ## Parameters : `fpex0.setup.Grid`
     **Grid**
     <br> A discretization grid for Fokker-Planck.
     
     **Parameters**
     <br> A collection of parameters and boudns, 
-    instance of `fpex0_python.setup.Parameters`.
+    instance of `fpex0.setup.Parameters`.
     
-    **Integration** : `fpex0_python.setup.Integration`
+    **Integration** : `fpex0.setup.Integration`
     <br> Represents an integrator to solve our discretization of Fokker-Planck.
 
     **FPdriftFcn** 
@@ -106,7 +106,7 @@ class Setup:
 
     def importMeasurements(self, T, values, heatrate, ID=None, gridskip=1):
         """
-        Imports measurements into FPEX0setup (`fpex0_python.setup.Measurements`).
+        Imports measurements into FPEX0setup (`fpex0.setup.Measurements`).
         An interpolation to the integration grid is performed and the interpolated values are stored.
         
         ## Takes 

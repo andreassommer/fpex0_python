@@ -3,7 +3,7 @@ requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "fpex0_python"
+name = "fpex0"
 version = "1.0.4a3"
 authors = [
     {name="Michael Strik", email="michael.strik@stud.uni-heidelberg.de"}
@@ -27,7 +27,7 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["fpex0_python", "fpex0_python.example"]
+packages = ["fpex0", "fpex0.example"]
 
 [tool.setuptools.package-data]
-'fpex0_python.example' = ["*.json"]
+'fpex0.example' = ["*.json"]

@@ -1,7 +1,7 @@
 import numpy as np
 
-from fpex0_python import simulate
-from fpex0_python.example.exampleSetup import exampleSetup
+from fpex0 import simulate
+from fpex0.example.exampleSetup import exampleSetup
 
 def test_simulate():
     FPEX0setup = exampleSetup()

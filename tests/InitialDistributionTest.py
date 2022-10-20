@@ -1,4 +1,4 @@
-from fpex0_python import InitialDistribution
+from fpex0 import InitialDistribution
 import sympy
 import numpy as np
 import time
