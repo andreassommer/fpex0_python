@@ -2,21 +2,22 @@
 
 
 # display help if called without arguments
-if [[ $1 = --help ]] || [[ $1 = help ]] || [[ $# -eq 0 ]]; then
-   echo "Usage:  deploy version"
-   echo "   version --> version number"
+if [[ $1 = --help ]] || [[ $1 = help ]]; then
+   echo "Usage:  deploy [gitremote]"
+   echo "   [gitremote] --> git remote to beused (default is used if not specified)"
+   echo "Tag is extracted from ../pyproject.toml"
    exit 0
 fi
 
+# extract version from pyproject.toml
+version=v$( grep "version" ../pyproject.toml | grep -o '".*"' | sed 's/"//g' )
 
-# first argument: version numberg, preponing v
-version=v$1
 
-# second argument (if available): remote
-if [[ "$2" = "" ]]; then
+# first argument (if available): remote
+if [[ "$1" = "" ]]; then
    gitremote=$( git remote | head -n 1 )
 else
-   gitremote=$2
+   gitremote=$1
 fi
 
 
