@@ -110,11 +110,15 @@ def importExampleMeasurements(FPEX0setup, gridskip: int):
     
     """
     for rate in ["0.60", "1.25", "2.50", "5.00", "10.00", "20.00"]:
-        path = resources.path('fpex0.example', f'ID407-rate_{rate}.json')
-        print(f"Absolute example data path is {path}.")
-        file = open(path)
-        data = json.load(file)
-
-        FPEX0setup.importMeasurements(data["T"], data["latentdata"], data["rate"], data["ID"], gridskip)
+        
+        with resources.path('fpex0.example', f'ID407-rate_{rate}.json') as path:
+            # using 'with' as resources.path() returns a context manager;
+            # that context manager provides an os-path
+            # --> path is now an os-path
+            print(f"Absolute example data path is {path}.")
+            with open(path) as file:
+                # use again a context manager to let open() care about closing the file
+                data = json.load(file)
+                FPEX0setup.importMeasurements(data["T"], data["latentdata"], data["rate"], data["ID"], gridskip)
 
     return FPEX0setup
