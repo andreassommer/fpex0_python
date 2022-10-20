@@ -78,7 +78,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install build
       - name: Build package
-        run: python -m build package/
+        run: python -m build fpex0/
       
       - name: Check dist / will pypi accept long-description?
         run: |
