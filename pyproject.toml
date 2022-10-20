@@ -14,7 +14,7 @@ maintainers = [
 license = {text="MIT License"}
 description = "This package is an implementation of the FPEX0 algorithm, a data-driven de-smearing method for DSC signals."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.7"
 classifiers=[
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: MIT License",
