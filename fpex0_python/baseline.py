@@ -230,7 +230,7 @@ def getBaselinePrimitive(X, Y, index_l, icept_l, slope_l, index_r, icept_r, slop
         Xmid = X[index_l:index_r+1]
         Ymid = Y[index_l:index_r+1] - lin_bl_fun(Xmid)
         Ymid = np.array([y if y >= 0 else 0 for y in Ymid])  # set negatives to zero
-        cumarea = integrate.cumulative_trapezoid(Ymid, Xmid)  # cumulative integral (area)
+        cumarea = integrate.cumtrapz(Ymid, Xmid)  # cumulative integral (area)
         sigmoidal = np.concatenate(([0], cumarea)) / max(cumarea) * yval_delta + yval_l  # add a zero for consistency with matlab code
 
         # interpolate integral at support points (res = #intervals)
