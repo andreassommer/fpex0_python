@@ -13,9 +13,9 @@ fi
 version=v$1
 
 # second argument (if available): remote
-if [[ "$2" = "" ]]
+if [[ "$2" = "" ]]; then
    gitremote=$( git remote | head -n 1 )
-elif
+else
    gitremote=$2
 fi
 
@@ -33,14 +33,14 @@ gitPUSH=(git push $gitremote $version)
 
 # display commands
 echo "Invoking following commands:"
-echo $gitUPDATEREF
-echo $gitPUSH
-echo "Press Ctrl-C to abort, enter to continue.'
+echo ${gitUPDATEREF[@]}
+echo ${gitPUSH[@]}
+echo "Press Ctrl-C to abort, enter to continue."
 read -n 1 -s
 
 # push invokes Package ci-cd workflow on github, jobs build and deploy
 # run the commands
-#"${gitUPDATEREF[@]}"
-#"${gitPUSH[@]}"
+"${gitUPDATEREF[@]}"
+"${gitPUSH[@]}"
 
 
