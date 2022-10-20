@@ -82,7 +82,7 @@ jobs:
           pip install numpy
           pip install sympy
       - name: Build package
-        run: python -m build fpex0/
+        run: python -m build
       
       - name: Check dist / will pypi accept long-description?
         run: |
