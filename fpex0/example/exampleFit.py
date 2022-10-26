@@ -15,7 +15,6 @@ def exampleFit():
     
     <br>
     No in- or output. Prints information and a solution parameter vector. <br>
-    Check details on the example setup in 
     """
     # make example setup
     print("Creating an example setup.")
@@ -31,7 +30,7 @@ def exampleFit():
     FPEX0setup.Integration.options["atol"] = 1e-14
 
     # fitting
-    print("Solving the fitting problem.")
+    print("\nSolving the fitting problem:")
     refTime = time.time()
     fit = fpex0.fit(FPEX0setup)
     duration = time.time() - refTime

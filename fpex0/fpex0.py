@@ -70,7 +70,7 @@ def simulate(FPEX0setup, pvec, odeoptions={}, method="BDF"):
         sTime = time.time()
         solution = integrator(FPrhs, t0tf, u0, method,**odeoptions)
         duration = time.time() - sTime
-        print(f"Integration: {duration:.3f}s.")
+        print(f"Simulate: {duration:.3f}s")
     except:
         exception = sys.exc_info()
         traceback.print_exception(*exception)
@@ -109,7 +109,7 @@ def fit(FPEX0setup, optimizer='lsq'):
     resvecfun = lambda p: residual(FPEX0setup, p)
 
     # optimization
-    print(f'\nStarting {optimizer}.\n')
+    print(f'Running {optimizer}.\n')
     
     if optimizer.lower() == 'lsq':
         lsq_opts = {}

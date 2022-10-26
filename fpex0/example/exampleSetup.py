@@ -115,7 +115,7 @@ def importExampleMeasurements(FPEX0setup, gridskip: int):
             # using 'with' as resources.path() returns a context manager;
             # that context manager provides an os-path
             # --> path is now an os-path
-            print(f"Absolute example data path is {path}.")
+            print(f"    {path}")
             with open(path) as file:
                 # use again a context manager to let open() care about closing the file
                 data = json.load(file)
