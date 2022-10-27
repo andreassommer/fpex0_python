@@ -34,7 +34,7 @@ pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://
 
 
 
-## Workflow
+## Workflow for testing and publishing to Test-PyPI
 
 For collaborators the repository includes a GitHub Actions workflow that can builds, tests and finally 
 publishes the package to test.pypi.org. The workflow is triggered when pushing tags that begin with "v".
