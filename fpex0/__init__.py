@@ -1,3 +1,7 @@
+"""
+.. include:: ../README.md
+"""
+
 from .fpex0 import *
 from .setup import *
 from .InitialDistribution import *
