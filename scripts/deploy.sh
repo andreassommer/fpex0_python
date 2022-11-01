@@ -4,6 +4,27 @@
 # get own directory (i.e. the directory, this script resides in)
 OWNDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
+
+# parse options, create a test versiontag as default
+prefix=tv
+while [[ $# ]]; do
+   case $1 in
+      -t | --test)
+      prefix=tv
+      shift
+      ;;
+      
+      -r | --release)
+      prefix=rv
+      shift
+      ;;
+
+      *)
+      # first non-option argument
+      break
+   esac
+done
+
 # test if pyproject.toml exists
 PYPROJECTFILEcandidate=$OWNDIR/../pyproject.toml
 if [[ ! -f "$PYPROJECTFILEcandidate" ]]; then
@@ -12,7 +33,7 @@ if [[ ! -f "$PYPROJECTFILEcandidate" ]]; then
 else
   # extract version from pyproject.toml
   PYPROJECTFILE=$PYPROJECTFILEcandidate
-  versiontag=v$( grep "version" $PYPROJECTFILE | grep -o '".*"' | sed 's/"//g' )
+  versiontag=${prefix}$( grep "version" $PYPROJECTFILE | grep -o '".*"' | sed 's/"//g' )
 fi
 
 # display info
@@ -24,10 +45,14 @@ echo ""
 # display help if called without arguments
 if [[ $1 = --help ]] || [[ $1 = help ]]; then
    echo ""
-   echo "Usage:  deploy [gitremote]"
+   echo "Usage:  deploy [option] [gitremote]"
+   echo "   [option]    --> One of the following two options:"
+   echo "                    * -r or --release for release tag (rv*)"
+   echo "                    * -t or --test for test-release tag (tv*)"
    echo "   [gitremote] --> git remote to be used (default is used if not specified)"
    echo ""
    echo "NOTES:"
+   echo "  * If no option is given, a test-release tag is created."
    echo "  * You can delete the tag from github using the following command:"
    echo "       git push --delete gitremotename $versiontag "
    echo "  * Local repository tag can be deleted by invoking:"
