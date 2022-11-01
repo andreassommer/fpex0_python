@@ -1,11 +1,11 @@
-name: Build Test Publish to Test-PyPI
+name: Build Publish to PyPI
 
 
 # run when pushing tags or manually run
 on:
   push:
     tags:
-    - 'tv*'
+    - 'rv*'
   workflow_dispatch:
 
 
@@ -13,7 +13,7 @@ on:
 jobs:
 
   build-and-publish:
-    name: Build and publish to Test-PyPI
+    name: Build and publish to PyPI
     runs-on: ubuntu-latest
 
     steps:
@@ -28,21 +28,10 @@ jobs:
     - name: Build package
       run: |
         python -m pip install --upgrade pip
-        pip install --upgrade setuptools build wheel twine pytest
+        pip install --upgrade setuptools build wheel twine
         python -m build
-        
-    - name: Install package
-      run: |
-        python3 -m build --wheel
-        pip install dist/*.whl
-    
-    - name: Test using pytest
-      run: |
-        pytest tests/    
-    
-    - name: Publish Test-PyPI
+            
+    - name: Publish PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-        repository_url: https://test.pypi.org/legacy/
-
+        password: ${{ secrets.PYPI_API_TOKEN }}
