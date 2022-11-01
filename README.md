@@ -28,7 +28,7 @@ pip install fpex0
 The software comes with an example implemented in fpex0.example.exampleFit().
 Running it will import example measurements, build an example setup and execute the algorithm.  
 After about 20 steps it should give a solution near by (rounded):
->       p = [-0.9555,  0.03284, 0.2862, 3.4171, 2.5246, 43.04561, 131.8116, 3.5925, 0.1893]
+>       p = [-0.9555,  0.03284, 0.2862, 3.4171, 2.5246, 43.0456, 131.8116, 3.5925, 0.1893]
 
 
 ## Extrapolating your own data
