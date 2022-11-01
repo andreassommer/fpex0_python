@@ -38,13 +38,13 @@ pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://
 For collaborators the repository includes GitHub Actions workflows to simplify package management.
 
 ### Build Test Publish to Test-PyPI
-This workflow builds, tests and finally publishes the package to the [test package index] (test.pypi.org). 
+This workflow builds, tests and finally publishes the package to the [test package index](test.pypi.org). 
 <br> It is triggered on every tag being pushed that begins with "tv", or by manual activation (at the
 Actions board on the repository).
 
 ### Build Publish to PyPI
 If no problems occured, you can use this workflow to publish the package to the actual
-[Python Package Index] (pypi.org). 
+[Python Package Index](pypi.org). 
 <br> It is triggered on every tag being pushed that begins with "rv", or by manual activation.
 
 ### Creating version tags automatically
