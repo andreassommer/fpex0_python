@@ -26,7 +26,7 @@ def exampleFit():
 
     # modify some configuration (as example)
     print("Setting integration options.")
-    FPEX0setup.Integration.options["rtol"] = 1e-10
+    FPEX0setup.Integration.options["rtol"] = 1e-8
     FPEX0setup.Integration.options["atol"] = 1e-14
 
     # fitting
