@@ -5,7 +5,7 @@ name: Build Test Publish to Test-PyPI
 on:
   push:
     tags:
-    - 'v*'
+    - 'tv*'
   workflow_dispatch:
 
 
