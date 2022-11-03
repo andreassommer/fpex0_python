@@ -26,7 +26,7 @@ while [[ $# ]]; do
 done
 
 # test if pyproject.toml exists
-PYPROJECTFILEcandidate=$OWNDIR/../pyproject.toml
+PYPROJECTFILEcandidate=$OWNDIR/pyproject.toml
 if [[ ! -f "$PYPROJECTFILEcandidate" ]]; then
   PYPROJECTFILE=NOT_FOUND
   versiontag=NOT_FOUND
