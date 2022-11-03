@@ -4,8 +4,8 @@ This package gives a Python implementation of the FPEX0 method
 for data-driven de-smearing of DSC signals presented in the paper
 
 Sommer, Andreas; Hohenauer, Wolfgang; Barz, Tilman:  
-Data-driven de-smearing of DSC signals.
-J Therm Anal Calorim (2022).
+Data-driven de-smearing of DSC signals.  
+J Therm Anal Calorim (2022).  
 https://doi.org/10.1007/s10973-022-11258-y
 
 
@@ -44,9 +44,9 @@ Please also read about sympy symbolic functions if not familiar.
 ## Data processing
 
 The functions described above assume **baseline corrected** data, so raw measurements must be processed.
-The modules CP, baseline can do that for you. <br>
+The modules CP, baseline can do that for you.  
 The processing consists of two parts: (1) calculating heat capacities, (2) detecting a baseline and
-subtracting it. 
+subtracting it.  
 Both of it is done by addCP() plus some previous data preparation. As there is no code example, we
 explain its usage:
 
