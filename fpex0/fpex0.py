@@ -97,7 +97,7 @@ def fit(FPEX0setup, optimizer='lsq'):
 
     ## Returns
     **result** 
-    <br> The optimized parameters as a vector.
+    <br> A scipy.optimize.OptimizeResult object, with fit.x holding the parameter vector found.
 
     """
     # retrieve parameter values, bounds, indices
