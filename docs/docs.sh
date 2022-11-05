@@ -24,5 +24,5 @@ if [[ $out == "127" ]]; then
     echo "Could not find pdoc."
     echo "Please install, e.g. via 'pip install pdoc'."
 elif [[ $out == "0" ]]; then
-    echo "Project documentation built at $OWNDIR."
+    echo "Project documentation built at $OWNDIR"
 fi

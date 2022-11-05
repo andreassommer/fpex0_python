@@ -62,12 +62,14 @@ fpex0    </h1>
 
                         <div class="docstring"><h1 id="fpex0-python">FPEX0 Python</h1>
 
+<p>Authors: Michael Strik and Andreas Sommer at the Interdisciplinary Center for Scientific Computing (IWR), University of Heidelberg.</p>
+
 <p>This package gives a Python implementation of the FPEX0 method <br />
 for data-driven de-smearing of DSC signals presented in the paper</p>
 
 <p>Sommer, Andreas; Hohenauer, Wolfgang; Barz, Tilman: <br />
-Data-driven de-smearing of DSC signals.
-J Therm Anal Calorim (2022).
+Data-driven de-smearing of DSC signals. <br />
+J Therm Anal Calorim (2022). <br />
 <a href="https://doi.org/10.1007/s10973-022-11258-y">https://doi.org/10.1007/s10973-022-11258-y</a></p>
 
 <p>A Matlab version of FPEX0 is available at
@@ -82,32 +84,44 @@ J Therm Anal Calorim (2022).
 
 <h2 id="running-an-example">Running an example</h2>
 
-<p>The software comes with an example implemented in <a href="fpex0/example/exampleFit.html">fpex0.example.exampleFit()</a>.
-Running it will import example measurements, build an example setup and execute the algorithm. <br />
+<p>The software comes with an example implemented in <code><a href="fpex0/example/exampleFit.html">fpex0.example.exampleFit()</a></code>, that can be run by:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="kn">import</span> <span class="nn">fpex0</span>
+<span class="n"><a href="fpex0/example/exampleFit.html">fpex0.example.exampleFit</a></span><span class="p">()</span>
+</code></pre>
+</div>
+
+<p>It will import measurements, build a setup and execute the algorithm. <br />
 After about 20 steps it should give a solution near by:</p>
 
 <blockquote>
-<pre><code>  p = [-0.9562, 0.0329, 0.2760, 3.4708, 2.5866, 42.5333, 131.8052, 3.7384, 0.1879]
+<pre><code>  p = [-0.9555,  0.03284, 0.2862, 3.4171, 2.5246, 43.0456, 131.8116, 3.5925, 0.1893]
 </code></pre>
 </blockquote>
 
 <h2 id="extrapolating-your-own-data">Extrapolating your own data</h2>
 
-<p>The heart of the package are the function fpex0.fit() and the class fpex0.Setup.
-Setup holds your measurements and all problem-related configurations, e.g. your diffusion function and its
-inital parameters. Then fit() uses your setup to fit the Fokker-Planck evolution to your measurements as
-an optimization problem.
-The example fit and used example functions should give a good understanding how the software is used.
-Please also read about sympy symbolic functions if not familiar.</p>
+<p>The heart of the package are the function <code>fpex0.fit()</code> and the class <code>fpex0.Setup</code>.
+<code>Setup</code> holds your measurements and all problem-related configurations, e.g. your initial distribution and 
+its inital parameters. Then <code>fit()</code> uses your setup to fit the Fokker-Planck evolution to the measurements
+as an optimization problem. <br />
+Reading the source code of <code>exampleFit()</code> and <code>exampleSetup()</code> should give a good understanding how the 
+software can be used. We also recommend reading about sympy symbolic functions if not familiar.</p>
 
 <h2 id="data-processing">Data processing</h2>
 
 <p>The functions described above assume <strong>baseline corrected</strong> data, so raw measurements must be processed.
-The modules CP, baseline can do that for you. <br>
-The processing consists of two parts: (1) calculating heat capacities, (2) detecting a baseline and
-subtracting it. 
-Both of it is done by addCP() plus some previous data preparation. As there is no code example, we
-explain its usage:</p>
+The submodules <code>CP</code>, <code>baseline</code> can do that for you. <br />
+Processing consists of two parts: </p>
+
+<ul>
+<li>calculating heat capacities,</li>
+<li>detecting a baseline and subtracting it.</li>
+</ul>
+
+<p>Both of it is done by <code>addCP()</code>, it will also do some previous data preparation. <br />
+As there is no code example, we will explain its usage:</p>
 
 <ol>
 <li>Create a DSC_Data object and load measurements</li>
@@ -140,22 +154,42 @@ explain its usage:</p>
 </code></pre>
 </div>
 
-<p>Now you can modify the setup and extrapolate your data.</p>
+<p>Now you can modify the setup and finally extrapolate your data via</p>
 
-<p>If you want to skip part (1) or (2), check for CP_DIN11357(), getBaseline(), subtractBaseline() or the
-source code of addCP().</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="n">fit</span> <span class="o">=</span> <span class="n">fpex0</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">FPEX0setup</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>Note that both <code>addCP()</code> and <code>importDSCobj()</code> can also take lists of <code>DSC_Data</code> objects:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="n">dsc_data</span> <span class="o">=</span> <span class="n">addCP</span><span class="p">([</span><span class="n">dsc_data1</span><span class="p">,</span> <span class="n">dsc_data2</span><span class="p">,</span> <span class="n">dsc_data3</span><span class="p">])</span>
+<span class="c1"># now dsc_data holds a list</span>
+<span class="n">FPEX0setup</span><span class="o">.</span><span class="n">importDSCobj</span><span class="p">(</span><span class="n">dsc_data</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>If you want to skip one of the steps, check for</p>
+
+<ul>
+<li><code>CP_DIN11357()</code> and <code>CP_sapphire_DIN11357()</code> (heat capacities),</li>
+<li><code>subtractBaseline()</code> and <code>getBaseline()</code> (baseline).</li>
+</ul>
+
+<p>These sets of functions can execute the raw single steps.</p>
 
 <h2 id="about-the-implementation">About the implementation</h2>
 
 <p>This is a Python version of Andreas Sommer's matlab implementation, which can be found at
 <a href="https://github.com/andreassommer/fpex0">https://github.com/andreassommer/fpex0</a>.</p>
 
-<p>The Fokker-Planck equation is solved as an ODE via method of lines, using scipy
-solve_ivp with BDF method as a default. That is basically a python version of matlab ode15s. <br />
+<p>The Fokker-Planck equation is solved as an ODE via method of lines, using scipy's
+solve_ivp with BDF method as a default. This is basically a python version of matlab ode15s. <br />
 The initial distribution, drift and diffusion are then fitted to the measurement data via an optimizer,
-by default scipy least_squares (which is also currently the only option). <br />
+by default scipy's least_squares (which is also currently the only option). <br />
 Other optimizers and integrators can be implemented by the user, if compatible to the interplay of
-fpex0.fit(), residual() and simulate(). However, the software is designed around the method of lines,
+<code>fpex0.fit()</code>, <code>residual()</code> and <code>simulate()</code>. However, the software is designed around the method of lines,
 so using another method to solve Fokker-Planck will require significant adjustments.</p>
 </div>
 
