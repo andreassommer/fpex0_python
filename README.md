@@ -6,7 +6,7 @@ This package gives a Python implementation of the FPEX0 method
 for data-driven de-smearing of DSC signals presented in the paper
 
 Sommer, Andreas; Hohenauer, Wolfgang; Barz, Tilman:  
-**Data**-driven de-smearing of DSC signals.  
+Data-driven de-smearing of DSC signals.  
 J Therm Anal Calorim (2022).  
 https://doi.org/10.1007/s10973-022-11258-y
 
