@@ -2,6 +2,8 @@
 
 Authors: Michael Strik and Andreas Sommer at the Interdisciplinary Center for Scientific Computing (IWR), University of Heidelberg.
 
+Documentation: https://andreassommer.github.io/fpex0_python/
+
 This package gives a Python implementation of the FPEX0 method  
 for data-driven de-smearing of DSC signals presented in the paper
 
