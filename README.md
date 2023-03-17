@@ -1,6 +1,6 @@
 # FPEX0 Python
 
-Authors: Michael Strik and Andreas Sommer at the Interdisciplinary Center for Scientific Computing (IWR), University of Heidelberg.
+Authors: Michael Strik and Andreas Sommer at the Interdisciplinary Center for Scientific Computing (IWR), Heidelberg University.
 
 Documentation: https://andreassommer.github.io/fpex0_python/
 

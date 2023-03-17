@@ -95,12 +95,12 @@ class Setup:
         return rhsFcn
 
 
-    def make_jacFcn(self, p_FPdrift, p_FPdiffusion):
+    def make_jacFcn(self, p_FPdrift, p_FPdiffusion, banded=False):
         """
         Generator for the ODEs jacobian.
         """
         fokker_planck = FokkerPlanck()
-        jacFcn = lambda t,u: fokker_planck.FokkerPlanckODE_dfdu(t, u, self.Grid.h, self.FPdriftFcn, p_FPdrift, self.FPdiffusionFcn, p_FPdiffusion)
+        jacFcn = lambda t,u: fokker_planck.FokkerPlanckODE_dfdu(t, u, self.Grid.h, self.FPdriftFcn, p_FPdrift, self.FPdiffusionFcn, p_FPdiffusion, banded)
         return jacFcn
 
 
@@ -411,8 +411,9 @@ class Integration:
     **NN, A, B**: Internal variables used by FokkerPlanckODE_dfdu.
     """
     # (TODO) Set default tolerances in Integration class (?)
-    def __init__(self, integrator=solve_ivp, method="BDF", options={}):
+    def __init__(self, integrator=solve_ivp, method="BDF", banded_jac=False, options={}):
         self.method     = method
+        self.banded_jac = banded_jac
         self.options    = options
         self.integrator = integrator
         self.NN         = None  # variables for FokkerPlanckODE_dfdu()
@@ -430,7 +431,7 @@ class Integration:
 
     def updateJacobian(self, jacobianFcn):
         """ Returns an option dictionary with updated jacobian. """
-        options = copy(self.options)
+        options = copy(self.options) # NOTE: Is a deepcopy appropriate here?
         options["jac"] = jacobianFcn
         self.options = options
         return options

@@ -6,7 +6,7 @@ from scipy import optimize
 import time
 
 
-def simulate(FPEX0setup, pvec, odeoptions={}, method="BDF"):
+def simulate(FPEX0setup, pvec, odeoptions={}):
     """
     Simulates Fokker-Planck with specified parameters for FP drift, diffusion, and initial function.
 
@@ -56,10 +56,11 @@ def simulate(FPEX0setup, pvec, odeoptions={}, method="BDF"):
     
     # generate right hand side, jacobian
     FPrhs         = FPEX0setup.make_rhsFcn(p_FPdrift, p_FPdiffusion)
-    FPjac         = FPEX0setup.make_jacFcn(p_FPdrift, p_FPdiffusion)
+    FPjac         = FPEX0setup.make_jacFcn(p_FPdrift, p_FPdiffusion, FPEX0setup.Integration.jac_banded)
 
     # setup integrator and update options, jacobian therein
-    integrator    = FPEX0setup.Integration.integrator    
+    integrator    = FPEX0setup.Integration.integrator 
+    method = FPEX0setup.Integration.method   
     odeoptions = FPEX0setup.Integration.updateOptions(odeoptions)
     odeoptions["dense_output"] = True   # dense_output for evaluable solution
     odeoptions = FPEX0setup.Integration.updateJacobian(FPjac)

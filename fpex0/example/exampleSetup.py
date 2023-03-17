@@ -82,7 +82,16 @@ def exampleSetup():
     IniDistFcn     = lambda x,p: FraserSuzuki.f(x,p)
 
     # Setup integrator (using defaults)
-    integrationObj = Integration()
+    method = 'BDF'
+    integrationObj = Integration(method=method)
+    
+    # LSODA needs the jacobian in banded form (cf. scipy ode docs)
+    if method=='LSODA':
+        integrationObj.method = 'LSODA'
+        integrationObj.banded_jac = True
+        integrationObj.options['lband'] = 1
+        integrationObj.options['uband'] = 1
+    
 
     # generate the setup object
     FPEX0setup = Setup(gridObj, parametersObj, integrationObj, FPdriftFcn, FPdiffusionFcn, IniDistFcn)

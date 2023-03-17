@@ -1,3 +1,4 @@
+import itertools
 import numpy as np
 from scipy import sparse
 
@@ -93,7 +94,7 @@ class FokkerPlanck:
         return dx
 
 
-    def FokkerPlanckODE_dfdu(self, t, u, h, driftFcn, driftParams, diffusionFcn, diffusionParams):
+    def FokkerPlanckODE_dfdu(self, t, u, h, driftFcn, driftParams, diffusionFcn, diffusionParams, banded=False):
         """
         Jacobian of FokkerPlanckODE w.r.t. state u, i.e. df/du. 
         
@@ -131,6 +132,9 @@ class FokkerPlanck:
         **diffusionParams**
         <br> Parameter vector for diffusion function.
         
+        **banded**
+        <br> Should the jacobian be provided in banded form?  
+        Format is described in [scipy.linalg.solve_banded](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.solve_banded.html).
 
         ## Returns
         **dfdu**
@@ -159,8 +163,24 @@ class FokkerPlanck:
         alpha = driftFcn(t, driftParams)
         D     = diffusionFcn(t, diffusionParams)
 
-        # asseble the jacobian
+        # assemble the jacobian
         dfdu = -alpha * self._A / (2*h)  +  D * self._B / h**2
+
+        if banded:
+            # should dfdu be returned in banded form?
+            dfdu_dia = sparse.dia_matrix(dfdu)
+            dfdu_banded = np.zeros((4,N))
+            data = dfdu_dia.data
+            offsets = dfdu_dia.offsets
+
+            # for n=3 the banded form is (d_1, d_0, d_-1) 
+            # where d_i are the diagonal arrays
+            map = [1,0,-1]
+            for i,j in itertools.product(range(3), range(3)):
+                if offsets[i] == map[j]:
+                    dfdu_banded[j,:] = data[i]
+            return dfdu_banded
+
         return dfdu
 
     @staticmethod
