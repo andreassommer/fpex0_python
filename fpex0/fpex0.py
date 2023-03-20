@@ -83,7 +83,7 @@ def simulate(FPEX0setup, pvec, odeoptions={}):
     return solution
 
 
-def fit(FPEX0setup, optimizer='lsq'):
+def fit(FPEX0setup, optimizer='lsq', sol_info=None):
     """
     Fits the Fokker-Planck simulation to the given measurements as an optimization of the parameters
     for drift, diffusion and the initial distribution.
@@ -107,7 +107,7 @@ def fit(FPEX0setup, optimizer='lsq'):
     p_ub = FPEX0setup.Parameters.p_ub
     
     # set function that computes the residual vector
-    resvecfun = lambda p: residual(FPEX0setup, p)
+    resvecfun = lambda p: residual(FPEX0setup, p, sol_info)
 
     # optimization
     print(f'Running {optimizer}.\n')
@@ -129,10 +129,10 @@ def fit(FPEX0setup, optimizer='lsq'):
         return result
 
     else:
-        raise ValueError("Your specified optimizer is not yet implemented. \nYou are welcomed to contact us by mail if interested in contributing!")
+        raise ValueError("Your specified optimizer is not yet implemented. \nYou are welcomed to contact us by mail if interested in contribution!")
 
 
-def residual(FPEX0setup, p_all):
+def residual(FPEX0setup, p_all, sim_data=None):
     """
     Calculates the residual vector of measurements and simulation values, i.e. measVals - simVals
     at suitable points.
@@ -163,7 +163,11 @@ def residual(FPEX0setup, p_all):
     grid_T       = FPEX0setup.Grid.gridT
 
     # simulate and store the FP solution
+    sTime = time.time()
     sol = simulate(FPEX0setup, p_all)
+    duration = time.time() - sTime
+    if sim_data is not None:
+        sim_data.append((sol, duration))
 
     # evaluate at measurement rates
     simdata = sol.sol(meas_rates)
