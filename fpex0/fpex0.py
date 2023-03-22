@@ -56,7 +56,7 @@ def simulate(FPEX0setup, pvec, odeoptions={}):
     
     # generate right hand side, jacobian
     FPrhs         = FPEX0setup.make_rhsFcn(p_FPdrift, p_FPdiffusion)
-    FPjac         = FPEX0setup.make_jacFcn(p_FPdrift, p_FPdiffusion, FPEX0setup.Integration.jac_banded)
+    FPjac         = FPEX0setup.make_jacFcn(p_FPdrift, p_FPdiffusion, FPEX0setup.Integration.banded_jac)
 
     # setup integrator and update options, jacobian therein
     integrator    = FPEX0setup.Integration.integrator 

@@ -326,7 +326,7 @@ class Parameters:
 
 class Grid:
     """
-    FPEX0 discretization(?) grid.
+    Discretization grids.
 
     ## Parameters
     **gridT**
@@ -401,6 +401,10 @@ class Integration:
     ## Parameters
     **method**
     <br> Method to use by scipy solve_ivp. Default is BDF.
+
+    **banded_jac**  
+    Whether the jacobian should be provided in banded form for implicit integrators.  
+    Only needed for method 'LSODA' when using scipy's solve_ivp. See fpex0.FokkerPlanck.FokkerPlanckODE_dfdu().
     
     **options**
     <br> Integration options. Currently not used. 

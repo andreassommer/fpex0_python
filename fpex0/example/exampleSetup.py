@@ -10,7 +10,7 @@ from fpex0 import FokkerPlanck
 from fpex0.InitialDistribution import InitialDistribution
 
 
-def exampleSetup():
+def exampleSetup(int_method='BDF'):
     """
     Generates example setup for FPEX0.
 
@@ -59,7 +59,7 @@ def exampleSetup():
                                     p_lb_FPdrift, p_lb_FPdiffusion, p_lb_iniDist,
                                     p_ub_FPdrift, p_ub_FPdiffusion, p_ub_iniDist  )
 
-    # Generate grid 
+    # Generate grid
     N        = 1001  # space resolution
 
     betamax  = 20   # maximum heat rate
@@ -82,11 +82,10 @@ def exampleSetup():
     IniDistFcn     = lambda x,p: FraserSuzuki.f(x,p)
 
     # Setup integrator (using defaults)
-    method = 'BDF'
-    integrationObj = Integration(method=method)
+    integrationObj = Integration(method=int_method)
     
     # LSODA needs the jacobian in banded form (cf. scipy ode docs)
-    if method=='LSODA':
+    if int_method=='LSODA':
         integrationObj.method = 'LSODA'
         integrationObj.banded_jac = True
         integrationObj.options['lband'] = 1
