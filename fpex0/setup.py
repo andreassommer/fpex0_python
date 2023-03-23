@@ -72,7 +72,7 @@ class Setup:
     **IniDistFcn**
     <br> Function object of inital distribution.
     """
-    def __init__(self, Grid, Parameters : dict, Integration, FPdriftFcn, FPdiffusionFcn, IniDistFcn):
+    def __init__(self, Grid, Parameters, Integration, FPdriftFcn, FPdiffusionFcn, IniDistFcn):
         self.Grid           = Grid
         self.Parameters     = Parameters
         self.Integration    = Integration
@@ -342,11 +342,22 @@ class Grid:
     **h** 
     <br> Grid size.
     """
-    def __init__(self, gridT, gridTdot):
+    def __init__(self, gridT, gridTdot, uniform=True):
         self.gridT = gridT
         self.gridTdot = gridTdot
+        self.uniform = uniform
         self.N = len(gridT)
-        self.h = ( gridT[-1] - gridT[0] ) / self.N
+        
+        if uniform is True:
+            self.h = ( gridT[-1] - gridT[0] ) / self.N
+        
+        elif uniform is False:
+            self.h = np.array([gridT[i+1] - gridT[i] for i in range(len(gridT)-1)])
+        
+        else:
+            print("Warning: Grid.uniform must either be True or False! Assuming uniform grid.")
+            self.uniform = True
+            self.h = ( gridT[-1] - gridT[0] ) / self.N
 
 
 

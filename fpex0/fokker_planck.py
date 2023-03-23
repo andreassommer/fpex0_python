@@ -58,32 +58,59 @@ class FokkerPlanck:
         Au = np.zeros_like(u)
 
         # numpy indexing is works differently for 1d and Nd arrays
-        if vectors > 1:
-            # first node
-            Bu[0,:] = ( -2*u[0,:] + 2*u[1,:] ) / h**2
-            # Au(1) is zero
+        if type(h) is int:
+            # uniform (spatial) grid
+            if vectors > 1:
+                # first node
+                Bu[0,:] = ( -2*u[0,:] + 2*u[1,:] ) / h**2
+                # Au(1) is zero
 
-            # inner nodes (remember: python slicing is exclusive right)
-            i = np.arange(1,N-1)
-            Au[i,:] = ( u[i-1,:] - u[i+1,:] ) / (2*h)            # 1st derivative stencil and scale
-            Bu[i,:] = ( u[i-1,:] - 2*u[i,:] + u[i+1,:] ) / h**2  # 2nd derivative stencil and scale
+                # inner nodes 
+                # (remember: python slicing is exclusive right)
+                i = np.arange(1,N-1)
+                Au[i,:] = ( u[i-1,:] - u[i+1,:] ) / (2*h)            # 1st derivative stencil and scale
+                Bu[i,:] = ( u[i-1,:] - 2*u[i,:] + u[i+1,:] ) / h**2  # 2nd derivative stencil and scale
 
-            # last node
-            Bu[N-1,:] = ( -2*u[N-1,:] + 2*u[N-2,:] ) / h**2
-            # Au(N) is zero
-        elif vectors == 1:
-            # first node
-            Bu[0] = ( -2*u[0] + 2*u[1] ) / h**2
-            # Au(1) is zero
+                # last node
+                Bu[N-1,:] = ( -2*u[N-1,:] + 2*u[N-2,:] ) / h**2
+                # Au(N) is zero
+            elif vectors == 1:
+                # first node
+                Bu[0] = ( -2*u[0] + 2*u[1] ) / h**2
+                # (Au(1) is zero)
 
-            # inner nodes (remember: python slicing is exclusive right)
-            i = np.arange(1,N-1)
-            Au[i] = ( u[i-1] - u[i+1] ) / (2*h)           # 1st derivative stencil and scale
-            Bu[i] = ( u[i-1] - 2*u[i] + u[i+1] ) / h**2   # 2nd derivative stencil and scale
+                # inner nodes (remember: python slicing is exclusive right)
+                i = np.arange(1,N-1)
+                Au[i] = ( u[i-1] - u[i+1] ) / (2*h)           # 1st derivative stencil and scale
+                Bu[i] = ( u[i-1] - 2*u[i] + u[i+1] ) / h**2   # 2nd derivative stencil and scale
 
-            # last node
-            Bu[N-1] = ( -2*u[N-1] + 2*u[N-2] ) / h**2
-            # Au[N-1] is zero      
+                # last node
+                Bu[N-1] = ( -2*u[N-1] + 2*u[N-2] ) / h**2
+                # (Au[N-1] is zero)      
+
+        elif type(h) is np.ndarray or type(h) is list:
+            # non-uniform grid
+            if vectors > 1:
+                pass
+            
+            elif vectors == 1:
+                # first node
+                Bu[0] = ( -2*u[0] + 2*u[1] ) / h[0]**2
+                # (Au(1) is zero)
+
+                # inner nodes 
+                # (remember: python ranges are exclusive on the right)
+                i = np.arange(1,N-1)
+                Au[i] = ( u[i-1] - u[i+1] ) / (2*h)           # 1st derivative stencil and scale
+                Bu[i] = ( u[i-1] - 2*u[i] + u[i+1] ) / h**2   # 2nd derivative stencil and scale
+
+                # difference schemes: Sundqvist and Veronis, 1970 (A simple finite-difference grid with non-constant intervals)
+                Au[i] = (u[i+1] - (h[i]/h[i-1])**2 * u[i-1] -(1 - (h[i]/h[i-1]**2)*u[i]) ) / (h[i]*(1+h[i]/h[i-1]))
+                Bu[i] = 2*(u[i+1] + h[i]/h[i-1]*u[i-1] - (1+h[i]/h[i-1])*u[i])/(h[i]*h[i-1]*(1+h[i]/h[i-1]))
+                
+                # last node
+                Bu[N-1] = ( -2*u[N-1] + 2*u[N-2] ) / h[-1]**2
+                # (Au[N-1] is zero)      
 
         # evaluate drift and diffusion
         alpha = driftFcn(t,driftParams)
@@ -95,6 +122,7 @@ class FokkerPlanck:
 
 
     def FokkerPlanckODE_dfdu(self, t, u, h, driftFcn, driftParams, diffusionFcn, diffusionParams, banded=False):
+        # TODO: Needs to be extended to uniform grids for the use of implicit integrators!
         """
         Jacobian of FokkerPlanckODE w.r.t. state u, i.e. df/du. 
         
@@ -150,12 +178,12 @@ class FokkerPlanck:
             # 1st order stencil
             self._A =  sparse.dia_matrix(( np.array([e1, e0, -e1]), [-1, 0, 1] ), shape=(N, N))
             self._A = sparse.csr_matrix(self._A)   # change format to edit single entries
-            self._A[0  ,1  ] = 0
+            self._A[0,  1  ] = 0
             self._A[N-1,N-2] = 0
             # 2nd order stencil + robin boundary
             self._B = sparse.dia_matrix(( np.array([e1 , -2*e1 ,  e1]), [-1,0,1] ), shape=(N, N))
             self._B = sparse.csr_matrix(self._B)
-            self._B[0  ,1  ] = 2
+            self._B[0,  1  ] = 2
             self._B[N-1,N-2] = 2
             self._NN = N
         
