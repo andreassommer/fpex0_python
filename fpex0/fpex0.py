@@ -14,7 +14,7 @@ def simulate(FPEX0setup, pvec, odeoptions={}):
     **FPEX0setup**
     <br> An FPEX0 setup configuration (`fpex0.setup.Setup`).
 
-    **p_all**
+    **pvec**
     <br> Vector of parameters, coupled to FPEX0setup.
     <br> It must have the same scheme as FPEX0setup.Parameters.p_0, 
     then simulate() knows how to extract the parameters correctly.
