@@ -1,6 +1,7 @@
 import itertools
 import numpy as np
 from scipy import sparse
+import time
 
 class FokkerPlanck:
     def __init__(self):
@@ -43,7 +44,6 @@ class FokkerPlanck:
         **dx**
         <br> rhs vector.
         """
-    
         # number of grid points and number of simultaneously requested vectors
         shape = u.shape
         # shape is (N,) if u is a one-dim array
@@ -57,8 +57,9 @@ class FokkerPlanck:
         Bu = np.zeros_like(u)
         Au = np.zeros_like(u)
 
-        # numpy indexing is works differently for 1d and Nd arrays
-        if type(h) is int:
+        # numpy indexing works differently for 1d and Nd arrays
+        # TODO: find a more general way for this. numpy's float64 would not be recognized
+        if type(h) is float or type(h) is np.float64:
             # uniform (spatial) grid
             if vectors > 1:
                 # first node
@@ -99,12 +100,8 @@ class FokkerPlanck:
                 # (Au(1) is zero)
 
                 # inner nodes 
-                # (remember: python ranges are exclusive on the right)
+                # (difference schemes: Sundqvist and Veronis, 1970 (A simple finite-difference grid with non-constant intervals))
                 i = np.arange(1,N-1)
-                Au[i] = ( u[i-1] - u[i+1] ) / (2*h)           # 1st derivative stencil and scale
-                Bu[i] = ( u[i-1] - 2*u[i] + u[i+1] ) / h**2   # 2nd derivative stencil and scale
-
-                # difference schemes: Sundqvist and Veronis, 1970 (A simple finite-difference grid with non-constant intervals)
                 Au[i] = (u[i+1] - (h[i]/h[i-1])**2 * u[i-1] -(1 - (h[i]/h[i-1]**2)*u[i]) ) / (h[i]*(1+h[i]/h[i-1]))
                 Bu[i] = 2*(u[i+1] + h[i]/h[i-1]*u[i-1] - (1+h[i]/h[i-1])*u[i])/(h[i]*h[i-1]*(1+h[i]/h[i-1]))
                 
