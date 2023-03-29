@@ -173,7 +173,7 @@ class FokkerPlanck:
             e1 = np.ones(N)
             e0 = np.zeros(N)
             # 1st order stencil
-            self._A =  sparse.dia_matrix(( np.array([e1, e0, -e1]), [-1, 0, 1] ), shape=(N, N))
+            self._A =  sparse.dia_matrix(( np.array([-e1, e0, e1]), [-1, 0, 1] ), shape=(N, N))
             self._A = sparse.csr_matrix(self._A)   # change format to edit single entries
             self._A[0,  1  ] = 0
             self._A[N-1,N-2] = 0
