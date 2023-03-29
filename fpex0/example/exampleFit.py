@@ -4,7 +4,7 @@ from fpex0.example.exampleSetup import exampleSetup, importExampleMeasurements
 import time
 
 
-def exampleFit():
+def exampleFit(method):
     """
     Runs an example fit with:
     - An example fpex0 setup configuration, retrieved by `fpex0.example.exampleSetup.exampleSetup()` (check for details)
@@ -18,7 +18,7 @@ def exampleFit():
     """
     # make example setup
     print("Creating an example setup.")
-    FPEX0setup = exampleSetup()
+    FPEX0setup = exampleSetup(int_method=method)
 
     # import the example data
     print("Importing example data.")
@@ -39,4 +39,4 @@ def exampleFit():
     print(f"Solution found: p = {fit.x}")
 
 if __name__=='__main__':
-    exampleFit()
+    exampleFit('BDF')
