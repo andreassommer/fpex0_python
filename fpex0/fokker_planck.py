@@ -102,7 +102,7 @@ class FokkerPlanck:
                 # inner nodes 
                 # (difference schemes: Sundqvist and Veronis, 1970 (A simple finite-difference grid with non-constant intervals))
                 i = np.arange(1,N-1)
-                Au[i] = (u[i+1] - (h[i]/h[i-1])**2 * u[i-1] -(1 - (h[i]/h[i-1]**2)*u[i]) ) / (h[i]*(1+h[i]/h[i-1]))
+                Au[i] = (u[i+1] - (h[i]/h[i-1])**2 * u[i-1] - (1-(h[i]/h[i-1])**2)*u[i] ) / (h[i]*(1+h[i]/h[i-1]))
                 Bu[i] = 2*(u[i+1] + h[i]/h[i-1]*u[i-1] - (1+h[i]/h[i-1])*u[i])/(h[i]*h[i-1]*(1+h[i]/h[i-1]))
                 
                 # last node
