@@ -69,7 +69,7 @@ class FokkerPlanck:
                 # inner nodes 
                 # (remember: python slicing is exclusive right)
                 i = np.arange(1,N-1)
-                Au[i,:] = ( u[i-1,:] - u[i+1,:] ) / (2*h)            # 1st derivative stencil and scale
+                Au[i,:] = ( u[i+1,:] - u[i-1,:] ) / (2*h)            # 1st derivative stencil and scale
                 Bu[i,:] = ( u[i-1,:] - 2*u[i,:] + u[i+1,:] ) / h**2  # 2nd derivative stencil and scale
 
                 # last node
@@ -82,7 +82,7 @@ class FokkerPlanck:
 
                 # inner nodes (remember: python slicing is exclusive right)
                 i = np.arange(1,N-1)
-                Au[i] = ( u[i-1] - u[i+1] ) / (2*h)           # 1st derivative stencil and scale
+                Au[i] = ( u[i+1] - u[i-1] ) / (2*h)           # 1st derivative stencil and scale
                 Bu[i] = ( u[i-1] - 2*u[i] + u[i+1] ) / h**2   # 2nd derivative stencil and scale
 
                 # last node
