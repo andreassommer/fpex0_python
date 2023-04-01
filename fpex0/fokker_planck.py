@@ -82,8 +82,10 @@ class FokkerPlanck:
 
                 # inner nodes (remember: python slicing is exclusive right)
                 i = np.arange(1,N-1)
-                Au[i] = ( u[i+1] - u[i-1] ) / (2*h)           # 1st derivative stencil and scale
-                Bu[i] = ( u[i-1] - 2*u[i] + u[i+1] ) / h**2   # 2nd derivative stencil and scale
+                #Au[i] = ( u[i+1] - u[i-1] ) / (2*h)           # 1st derivative central stencil
+                #Au[i] = ( u[i+1] - u[i] ) / (h)               # 1st derivative forward stencil
+                Au[i] = ( u[i] - u[i-1] ) / (h)               # 1st derivative backward stencil
+                Bu[i] = ( u[i-1] - 2*u[i] + u[i+1] ) / h**2   # 2nd derivative central stencil
 
                 # last node
                 Bu[N-1] = ( -2*u[N-1] + 2*u[N-2] ) / h**2
@@ -91,6 +93,7 @@ class FokkerPlanck:
 
         elif type(h) is np.ndarray or type(h) is list:
             # non-uniform grid
+            # DEV/NOTE we need to care better about cancellation! We have problems with that sometimes in experiments
             if vectors > 1:
                 pass
             
@@ -169,36 +172,67 @@ class FokkerPlanck:
         N = len(u)
 
         # if dimension has changed, we have to reassemble the stencil
+        # DEV/NOTE: What about changing grids? Need to include that case
         if N != self._NN:
-            e1 = np.ones(N)
-            e0 = np.zeros(N)
-            # 1st order stencil
-            self._A =  sparse.dia_matrix(( np.array([-e1, e0, e1]), [-1, 0, 1] ), shape=(N, N))
-            self._A = sparse.csr_matrix(self._A)   # change format to edit single entries
-            self._A[0,  1  ] = 0
-            self._A[N-1,N-2] = 0
-            # 2nd order stencil + robin boundary
-            self._B = sparse.dia_matrix(( np.array([e1 , -2*e1 ,  e1]), [-1,0,1] ), shape=(N, N))
-            self._B = sparse.csr_matrix(self._B)
-            self._B[0,  1  ] = 2
-            self._B[N-1,N-2] = 2
-            self._NN = N
+            if type(h) is float or type(h) is np.float64:
+                # uniform grid
+
+                e1 = np.ones(N)
+                e0 = np.zeros(N)
+                # 1st order stencil
+                self._A = sparse.dia_matrix(( np.array([-e1, e0, e1]), [-1,0,1] ), shape=(N, N))
+                self._A = sparse.csr_matrix(self._A)   # change format to edit single entries
+                self._A[0,  1  ] = 0
+                self._A[N-1,N-2] = 0
+                # 2nd order stencil + robin boundary
+                self._B = sparse.dia_matrix(( np.array([e1 , -2*e1 ,  e1]), [-1,0,1] ), shape=(N, N))
+                self._B = sparse.csr_matrix(self._B)
+                self._B[0,  1  ] = 2
+                self._B[N-1,N-2] = 2
+                self._NN = N
+
+            elif type(h) is np.ndarray or type(h) is list:
+                # non-uniform grid
+                # help variables
+                e1 = np.ones(N)
+                h_ratio = h[1:]/h[:-1]
+
+                # 1st order stencil
+                scale = h[1:]*(1+h_ratio)
+                dsub = np.concatenate((-h_ratio**2/scale,[0, 0]))
+                d0   = np.concatenate(([0],-(1-h_ratio**2)/scale, [0]))
+                dsup = np.concatenate(([0, 0], e1[:-2]/scale))
+                self._A = sparse.dia_matrix(( np.array([dsub, d0, dsup]), [-1,0,1] ), shape=(N, N))
+                
+                # 2nd order stencil + robin boundary
+                scale = h[1:]*h[:-1]*(1+h_ratio)
+                dsub = np.concatenate((-2*h_ratio/scale,[2/(h[-1]**2), 0]))
+                d0   = np.concatenate(([-2/(h[0]**2)],-2*(1+h_ratio)/scale, [-2/(h[-1]**2)]))
+                dsup = np.concatenate(([0, 2/(h[0]**2)], 2*e1[:-2]/scale))
+                self._B = sparse.dia_matrix(( np.array([dsub, d0,  dsup]), [-1,0,1] ), shape=(N, N))
+                self._NN = N
+
         
         # evaluate drift and diffusion
         alpha = driftFcn(t, driftParams)
         D     = diffusionFcn(t, diffusionParams)
 
         # assemble the jacobian
-        dfdu = -alpha * self._A / (2*h)  +  D * self._B / h**2
+        if type(h) is float or type(h) is np.float64:
+            dfdu = -alpha * self._A / (2*h)  +  D * self._B / h**2
+        
+        elif type(h) is np.ndarray or type(h) is list:
+            dfdu = -alpha*self._A  +  D*self._B
 
         if banded:
-            # should dfdu be returned in banded form?
+            # dfdu is required in banded form
             dfdu_dia = sparse.dia_matrix(dfdu)
+            # LSODA fortran code seems to require one additional row
             dfdu_banded = np.zeros((4,N))
             data = dfdu_dia.data
             offsets = dfdu_dia.offsets
 
-            # for n=3 the banded form is (d_1, d_0, d_-1) 
+            # for n=3 diagonals, the banded form is (d_1, d_0, d_-1) 
             # where d_i are the diagonal arrays
             map = [1,0,-1]
             for i,j in itertools.product(range(3), range(3)):
