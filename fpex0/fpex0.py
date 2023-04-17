@@ -6,7 +6,7 @@ from scipy import optimize
 import time
 
 
-def simulate(FPEX0setup, pvec, odeoptions={}):
+def simulate(FPEX0setup, pvec, odeoptions={}, sensivities=False):
     """
     Simulates Fokker-Planck with specified parameters for FP drift, diffusion, and initial function.
 
@@ -49,41 +49,47 @@ def simulate(FPEX0setup, pvec, odeoptions={}):
 
     # evaluate initial distribution
     gridT         = FPEX0setup.Grid.gridT
-    u0            = FPEX0setup.IniDistFcn(gridT, p_IC)
+    u0            = FPEX0setup.IniDist.f(gridT, p_IC)
 
     # retrieve "time" horizon for integrator
     t0tf          = FPEX0setup.Grid.gridTdot[[0, -1]]
     
     # generate right hand side, jacobian
-    FPrhs         = FPEX0setup.make_rhsFcn(p_FPdrift, p_FPdiffusion)
-    FPjac         = FPEX0setup.make_jacFcn(p_FPdrift, p_FPdiffusion, FPEX0setup.Integration.banded_jac)
+    # insert control flow to compute either the nominal solution, the jacobian or both
+    FPrhs         = FPEX0setup.make_rhsFcn(p_FPdrift, p_FPdiffusion, sensivities)
+    FPjac         = FPEX0setup.make_jacFcn(p_FPdrift, p_FPdiffusion, sensivities, FPEX0setup.Integration.banded_jac)
 
     # setup integrator and update options, jacobian therein
-    integrator    = FPEX0setup.Integration.integrator 
-    method = FPEX0setup.Integration.method   
-    odeoptions = FPEX0setup.Integration.updateOptions(odeoptions)
+    integrator  = FPEX0setup.Integration.integrator
+    method      = FPEX0setup.Integration.method
+    odeoptions  = FPEX0setup.Integration.updateOptions(odeoptions)
     odeoptions["dense_output"] = True   # dense_output for evaluable solution
-    odeoptions = FPEX0setup.Integration.updateJacobian(FPjac)
+    odeoptions  = FPEX0setup.Integration.updateJacobian(FPjac)
     
+    # if sensivities are requested, the initial condition u0 has to be augmented
+    if sensivities:
+        dy0dp = lambda x,p: FPEX0setup.IniDist.dfdp(x, p)
+        Gp0 = dy0dp(gridT, p_IC)
+        u0 = np.append(u0, Gp0)
 
     # start integration
     try:
         sTime = time.time()
         solution = integrator(FPrhs, t0tf, u0, method,**odeoptions)
+        # DEV/NOTE: solve_ivp takes flag "vectorized". we should use it
         duration = time.time() - sTime
         print(f"Simulate: {duration:.3f}s")
     except:
         exception = sys.exc_info()
         traceback.print_exception(*exception)
         print('Integration failed!')
-
         duration = None
         solution = None
     
     return solution
 
 
-def fit(FPEX0setup, optimizer='lsq', sol_info=None):
+def fit(FPEX0setup, optimizer='lsq'):
     """
     Fits the Fokker-Planck simulation to the given measurements as an optimization of the parameters
     for drift, diffusion and the initial distribution.
@@ -107,7 +113,8 @@ def fit(FPEX0setup, optimizer='lsq', sol_info=None):
     p_ub = FPEX0setup.Parameters.p_ub
     
     # set function that computes the residual vector
-    resvecfun = lambda p: residual(FPEX0setup, p, sol_info)
+    resvecfun = lambda p: residual(FPEX0setup, p)
+    jac       = lambda p: jacobian(FPEX0setup, p)
 
     # optimization
     print(f'Running {optimizer}.\n')
@@ -115,7 +122,7 @@ def fit(FPEX0setup, optimizer='lsq', sol_info=None):
     if optimizer.lower() == 'lsq':
         lsq_opts = {}
         # set options
-        lsq_opts["jac"] = '3-point'
+        lsq_opts["jac"] = jac
         lsq_opts["max_nfev"]                    = 100000    # max function evaluations
                                                             # tolerances
         lsq_opts["xtol"]                        = 1e-6      # x-step
@@ -132,7 +139,7 @@ def fit(FPEX0setup, optimizer='lsq', sol_info=None):
         raise ValueError("Your specified optimizer is not yet implemented. \nYou are welcomed to contact us by mail if interested in contribution!")
 
 
-def residual(FPEX0setup, p_all, sim_data=None):
+def residual(FPEX0setup, p_all):
     """
     Calculates the residual vector of measurements and simulation values, i.e. measVals - simVals
     at suitable points.
@@ -162,17 +169,15 @@ def residual(FPEX0setup, p_all, sim_data=None):
 
     grid_T       = FPEX0setup.Grid.gridT
 
-    # simulate and store the FP solution
-    sTime = time.time()
+    # simulate
+    # sTime = time.time()
     sol = simulate(FPEX0setup, p_all)
-    duration = time.time() - sTime
-    if sim_data is not None:
-        sim_data.append((sol, duration))
-
+    # duration = time.time() - sTime
     # evaluate at measurement rates
     simdata = sol.sol(meas_rates)
 
-    resvec = np.empty(1)
+    # residual
+    resvec = np.array([])
     for k in range(meas_count):
         # select grid points matching to measurements
         _, idxGrid, idxMeas = np.intersect1d(grid_T, meas_T[k], assume_unique=True, return_indices=True)
@@ -184,3 +189,45 @@ def residual(FPEX0setup, p_all, sim_data=None):
         resvec   = np.append(resvec, measVals - simVals)
 
     return resvec
+
+def jacobian(FPEX0setup, p_all):
+    """
+    Docs.
+    """
+    # DEV/NOTE: We let the jacobian be computed by simulate. 
+    #           By the use of flags we request the solution, it's jacobian or both.
+    measurements = FPEX0setup.Measurements
+    meas_count   = len(measurements.rates)
+    meas_values  = measurements.values
+    meas_T       = measurements.temperatures
+    meas_rates   = measurements.rates
+
+    grid_T       = FPEX0setup.Grid.gridT
+
+    # simulate
+    sol = simulate(FPEX0setup, p_all, sensitivities=True)
+    # evaluate at measurement rates
+    simdata = sol.sol(meas_rates)
+    # extract sensitivities
+    np = len(p_all)
+    nu = len(sol.sol(grid_T[0]))//(np+1) # one nominal solution + for every parameter the sensivity (dy/dp)
+    sensitivitydata = simdata[nu:,:]
+
+    # residual
+    jac = []
+    for i, p in enumerate(p_all):
+        dres_dp = np.array([])
+        for k in range(meas_count):
+            # select grid points matching to measurements
+            _, idxGrid, _idxMeas = np.intersect1d(grid_T, meas_T[k], assume_unique=True, return_indices=True)
+            if len(idxGrid) != len(meas_T[k]):
+                raise ValueError("Grid does not fit.")
+            
+            # get sensivity data corresponding to measurements
+            sensVals = sensitivitydata[idxGrid+i*nu, k]
+            np.append(dres_dp, sensVals)
+
+        jac.append(dres_dp)
+    jac = np.column_stack(jac)
+    
+    return jac
