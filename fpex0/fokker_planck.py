@@ -9,6 +9,55 @@ class FokkerPlanck:
         self._A          = None
         self._B          = None
 
+    def FD_stencils(self, u, h, recompute=False):
+        N = len(u)
+
+        # do the stencils have to be reassembled?
+        # DEV/NOTE: For moving grids, the jacobian has to be recomputed regularly.
+        if N != self._NN or recompute:
+            
+            # uniform grid
+            if type(h) is float or type(h) is np.float64:
+                # uniform grid
+                e1 = np.ones(N)
+                e0 = np.zeros(N)
+                # 1st order stencil
+                self._A = sparse.dia_matrix(( np.array([-e1/(2*h), e0/(2*h), e1/(2*h)]), [-1,0,1] ), shape=(N, N))
+                self._A = sparse.csr_matrix(self._A)   # change format to edit single entries
+                self._A[0,  1  ] = 0
+                self._A[N-1,N-2] = 0
+                # 2nd order stencil + robin boundary
+                self._B = sparse.dia_matrix(( np.array([e1/h**2, -2*e1/h**2,  e1/h**2]), [-1,0,1] ), shape=(N, N))
+                self._B = sparse.csr_matrix(self._B)
+                self._B[0,  1  ] = 2
+                self._B[N-1,N-2] = 2
+                self._NN = N
+            
+            # non-uniform grid
+            elif type(h) is np.ndarray:
+                # non-uniform grid
+                # help variables
+                e1 = np.ones(N)
+                h_ratio = h[1:]/h[:-1]
+
+                # 1st order stencil
+                scale = h[1:]*(1+h_ratio)
+                dsub = np.concatenate((-h_ratio**2/scale,[0, 0]))
+                d0   = np.concatenate(([0],-(1-h_ratio**2)/scale, [0]))
+                dsup = np.concatenate(([0, 0], e1[:-2]/scale))
+                self._A = sparse.dia_matrix(( np.array([dsub, d0, dsup]), [-1,0,1] ), shape=(N, N))
+                
+                # 2nd order stencil + robin boundary
+                scale = h[1:]*h[:-1]*(1+h_ratio)
+                dsub = np.concatenate((2*h_ratio/scale,[2/(h[-1]**2), 0]))
+                d0   = np.concatenate(([-2/(h[0]**2)],-2*(1+h_ratio)/scale, [-2/(h[-1]**2)]))
+                dsup = np.concatenate(([0, 2/(h[0]**2)], 2*e1[:-2]/scale))
+                self._B = sparse.dia_matrix(( np.array([dsub, d0,  dsup]), [-1,0,1] ), shape=(N, N))
+                self._NN = N
+
+        return self._A, self._B
+    
+
     @staticmethod
     def FokkerPlanckODE(t, u, h, driftFcn, driftParams, diffusionFcn, diffusionParams):
         """
@@ -58,7 +107,7 @@ class FokkerPlanck:
         Au = np.zeros_like(u)
 
         # numpy indexing works differently for 1d and Nd arrays
-        # TODO: find a more general way for this. numpy's float64 would not be recognized
+        # TODO: find a more general way for this. add flag "uniform" for example.
         if type(h) is float or type(h) is np.float64:
             # uniform (spatial) grid
             if vectors > 1:
@@ -168,61 +217,15 @@ class FokkerPlanck:
         **dfdu**
         <br> Sparse jacobian of FokkerPlanckODE (scipy.sparse).
         """
-        # dimension
-        N = len(u)
-
-        # if dimension has changed, we have to reassemble the stencil
-        # DEV/NOTE: What about changing grids? Need to include that case
-        if N != self._NN:
-            if type(h) is float or type(h) is np.float64:
-                # uniform grid
-
-                e1 = np.ones(N)
-                e0 = np.zeros(N)
-                # 1st order stencil
-                self._A = sparse.dia_matrix(( np.array([-e1, e0, e1]), [-1,0,1] ), shape=(N, N))
-                self._A = sparse.csr_matrix(self._A)   # change format to edit single entries
-                self._A[0,  1  ] = 0
-                self._A[N-1,N-2] = 0
-                # 2nd order stencil + robin boundary
-                self._B = sparse.dia_matrix(( np.array([e1 , -2*e1 ,  e1]), [-1,0,1] ), shape=(N, N))
-                self._B = sparse.csr_matrix(self._B)
-                self._B[0,  1  ] = 2
-                self._B[N-1,N-2] = 2
-                self._NN = N
-
-            elif type(h) is np.ndarray or type(h) is list:
-                # non-uniform grid
-                # help variables
-                e1 = np.ones(N)
-                h_ratio = h[1:]/h[:-1]
-
-                # 1st order stencil
-                scale = h[1:]*(1+h_ratio)
-                dsub = np.concatenate((-h_ratio**2/scale,[0, 0]))
-                d0   = np.concatenate(([0],-(1-h_ratio**2)/scale, [0]))
-                dsup = np.concatenate(([0, 0], e1[:-2]/scale))
-                self._A = sparse.dia_matrix(( np.array([dsub, d0, dsup]), [-1,0,1] ), shape=(N, N))
-                
-                # 2nd order stencil + robin boundary
-                scale = h[1:]*h[:-1]*(1+h_ratio)
-                dsub = np.concatenate((-2*h_ratio/scale,[2/(h[-1]**2), 0]))
-                d0   = np.concatenate(([-2/(h[0]**2)],-2*(1+h_ratio)/scale, [-2/(h[-1]**2)]))
-                dsup = np.concatenate(([0, 2/(h[0]**2)], 2*e1[:-2]/scale))
-                self._B = sparse.dia_matrix(( np.array([dsub, d0,  dsup]), [-1,0,1] ), shape=(N, N))
-                self._NN = N
-
+        # obtain FD stencils of the discretization
+        A, B = self.FD_stencils(u, h)
         
         # evaluate drift and diffusion
         alpha = driftFcn(t, driftParams)
         D     = diffusionFcn(t, diffusionParams)
 
         # assemble the jacobian
-        if type(h) is float or type(h) is np.float64:
-            dfdu = -alpha * self._A / (2*h)  +  D * self._B / h**2
-        
-        elif type(h) is np.ndarray or type(h) is list:
-            dfdu = -alpha*self._A  +  D*self._B
+        dfdu = -alpha*A  +  D*B
 
         if banded:
             # dfdu is required in banded form
@@ -241,6 +244,36 @@ class FokkerPlanck:
             return dfdu_banded
 
         return dfdu
+
+
+    def FokkerPlanckODE_dfdp_FP(self, t, u, h, driftFcn_p, driftParams, diffusionFcn_p, diffusionParams):
+        # dimensions
+        n = len(u)
+        np_FP = len(driftParams) + len(diffusionParams)
+
+        # prepare variables
+        # derivatives
+        alpha_p = driftFcn_p(t, driftParams)
+        D_p     = diffusionFcn_p(t, diffusionParams)
+
+        # preallocate
+        dfdp_FP = np.zeros((n, np_FP))
+
+        # precompute
+        A, B = self.FD_stencils(u, h)
+        Au = A@u
+        Bu = B@u
+        
+        # compute entries
+        np_dr = len(driftParams)
+        for i in range(np_dr):
+            dfdp_FP[:,i] = -alpha_p[i]*Au
+
+        for i in range(np_dr, np_FP):
+            dfdp_FP[:,i] = D_p[i]*Bu
+
+        return dfdp_FP
+
 
     @staticmethod
     def defaultDriftFcn(t,p):
