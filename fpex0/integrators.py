@@ -1,50 +1,35 @@
 """
 Self-written integrators for the solution of the semi-discretized Fokker-Planck equation.
-
-31/03
-Integrator with updating / moving grid.
-
-Requirements.
-- full control of solve_ivp
-- take custom update functions for the grid
 """
-# from scipy.integrate import solve_ivp
+
+import fpex0.setup as setup
+from scipy.integrate import quad
+from scipy.integrate import solve_ivp
 import numpy as np
 
-"""
-def vargrid_integrate(grid, update, fix_steps, integrator=solve_ivp, **kwargs):
-    # DEV/NOTE: DRAFT
-    # The solution must be stored every time the grid is changing.
-    # A difficulty lies in keeping track of the changing grid.
-    # In some way, a functionality is needed that stores all grids and
-    # provides them when the residual is calculated.
 
-    # Parameters could be read from FPEX0setup.
-    # But: Function signature alterations would be necessary.
-    # Also, big amounts of data might be passed every time.
-    # Depends how Python passes class instances.
-    t0tf = grid.gridTdot[[0,-1]] # extract
-    first_step = None
-    while tf_k <= t0tf[-1]:
-        sol_k = integrator(first_step=first_step, max_step=fix_steps, **kwargs)
-        
-        # parameters for restart
-        tf_k = sol_k.t[-1]
-        first_step = sol_k.t[-1] - sol_k.t[-2]
-        kwargs["t_span"] = [tf_k, t0tf[-1]]
-        
-        # do something
-        update(grid)
+def equigrid_t0(FPEX0setup, m):
+    # IN PROGRESS
+    M0    = FPEX0setup.Integration.monitor
+    x0xf  = FPEX0setup.Grid.gridT[[0,-1]]
+    x0,xf = x0xf[0], x0xf[1]
+    p0_IC = FPEX0setup.Parameters.p0_iniDist
+    u_x   = lambda x: FPEX0setup.IniDist.dfdx( np.array([x]), np.array(p0_IC))
+    u_xx  = lambda x: FPEX0setup.IniDist.dfdxx(np.array([x]), np.array(p0_IC))
+    eta0 = quad(lambda x: M0(x, u_x, u_xx), x0, xf)[0]
 
-        # interpolate
-        # -- scipy.interpolate
-        kwargs["y0"] = None # new initial value
+    # integrate
+    RHS = lambda t, x: eta0/M0(x, u_x, u_xx)
+    sol = solve_ivp(fun=RHS, t_span=[0,1], y0=[x0xf[0]], dense_output=True, rtol=1e-5, atol=1e-8)
+    x = sol.sol
+    # construct grid
+    t = np.linspace(0, 1, m)
+    xgrid = x(t)[0]
+
+    return xgrid
 
 
-    return sol_k
-"""
-
-def equidistribute_grid(Grid, U, alpha):
+def equigrid(Grid, U, alpha):
     """
     Determines on the basis of a given discrete solution U at time t an x-grid distributing
     the integral of the monitor function M(x,t) = (alpha + |u_xx(x,t)|)^1/2 over its intervals.
@@ -73,7 +58,7 @@ def equidistribute_grid(Grid, U, alpha):
     [2] Senz-Serna and Christie: "A Simple Adaptive Technique for Nonlinear Wave Problems"  
         in Journal of Computational Physics 67 (1986), 348-360.
     """
-    # DEV/NOTE: might even customize monitor function
+    # DEV/TODO: make monitor function custom
 
     # Algorithm from Senz-Serna and Christie (p. 351) with modifications by Blom et al.
     # It could be used any appropriate monitor function, for now we sticked to 
@@ -126,3 +111,43 @@ def equidistribute_grid(Grid, U, alpha):
     x_new.append(x[-1])
     
     return x_new
+
+
+def equigrid_odeint(update, FPEX0setup, gridpoints=1001, **kwargs):
+    # DEV/NOTE: DRAFT
+    # The solution must be stored every time the grid is changing.
+    # A difficulty lies in keeping track of the changing grid.
+    # In some way, a functionality is needed that stores all grids and
+    # provides them when the residual is calculated.
+
+    t0tf = FPEX0setup.Grid.gridTdot[[0,-1]] # extract
+    integrator = FPEX0setup.Integration.integrator
+    first_step = None
+    fixed_steps = FPEX0setup.Integration.fixed_steps
+
+    # an inital grid needs to be calculated first
+    initial_gridT = equigrid_t0(FPEX0setup, gridpoints)
+    initial_gridTdot = FPEX0setup.Grid.gridTdot
+    initial_grid = setup.Grid(initial_gridT, initial_gridTdot, uniform=False)
+
+
+    # other steps on updating grid
+    while tf_k <= t0tf[-1]:
+        sol_k = integrator(first_step=first_step, max_step=fixed_steps, **kwargs)
+        
+        # parameters for restart
+        tf_k = sol_k.t[-1]
+        first_step = sol_k.t[-1] - sol_k.t[-2]
+        kwargs["t_span"] = [tf_k, t0tf[-1]]
+        
+        # do something
+        grid = None # !DUMMY!
+        update(grid)
+
+        # interpolate
+        # -- scipy.interpolate
+        kwargs["y0"] = None # new initial value
+
+
+    return sol_k
+
