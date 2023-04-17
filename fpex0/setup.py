@@ -5,6 +5,7 @@ from scipy.integrate import solve_ivp
 from scipy import interpolate
 
 from .fokker_planck import FokkerPlanck
+from .vde import FokkerPlanckVDE
 
 
 class DSC_Data:
@@ -63,45 +64,62 @@ class Setup:
     **Integration** : `fpex0.setup.Integration`
     <br> Represents an integrator to solve our discretization of Fokker-Planck.
 
+    **IniDist**
+    <br> Represents the initial distribution and its derivatives, instance of InitialDistribution.
+
     **FPdriftFcn** 
     <br> Function object of Fokker-Planck drift.
     
     **FPdiffusionFcn**
     <br> Function object of Fokker-Planck diffusion.
-    
-    **IniDistFcn**
-    <br> Function object of inital distribution.
+
+    **FPdriftFcn_p**  
+    Jacobian of FPdriftFcn w.r.t. the drift and diffusion parameters.
+
+    **FPdiffusionFcn_p**  
+    Jacobian of FPdiffusionFcn w.r.t. the drift and diffusion parameters.
     """
-    def __init__(self, Grid, Parameters, Integration, FPdriftFcn, FPdiffusionFcn, IniDistFcn):
+
+    def __init__(self, Grid, Parameters, Integration, InitialDistribution, FPdriftFcn, FPdiffusionFcn, 
+                                                    FPdriftFcn_p=None, FPdiffusionFcn_p=None):
         self.Grid           = Grid
         self.Parameters     = Parameters
         self.Integration    = Integration
         self.FPdriftFcn     = FPdriftFcn
         self.FPdiffusionFcn = FPdiffusionFcn
-        self.IniDistFcn     = IniDistFcn
+        self.IniDist        = InitialDistribution
+        self.FPdriftFcn_p   = FPdriftFcn_p
+        self.FPdiffusionFcn_p = FPdiffusionFcn_p
         
         self.Measurements   = Measurements()
 
 
-    def make_rhsFcn(self, p_FPdrift, p_FPdiffusion):
+    def make_rhsFcn(self, p_FPdrift, p_FPdiffusion, sensivities=False):
         """
         Generator for the ODEs right-hand-side.
         """
-        h = self.Grid.h
-        FPdriftFcn = self.FPdriftFcn
-        FPdiffusionFcn = self.FPdiffusionFcn
+        if sensivities:
+            n_p = len(self.Parameters.p0)
+            fokker_planck_vde = FokkerPlanckVDE()
+            rhsFcn = lambda t, uu: fokker_planck_vde.FokkerPlanckVDE_ODE(t, uu, self.Grid.h, 
+                self.driftFcn, self.driftFcn_p, self.driftParams, self.diffusionFcn, self.diffusionFcn_p, self.diffusionParams, n_p)
 
-        rhsFcn = lambda t,u: FokkerPlanck.FokkerPlanckODE(t, u, self.Grid.h, self.FPdriftFcn, p_FPdrift, self.FPdiffusionFcn, p_FPdiffusion)
+        else:
+            rhsFcn = lambda t, u: FokkerPlanck.FokkerPlanckODE(t, u, self.Grid.h, self.FPdriftFcn, p_FPdrift, self.FPdiffusionFcn, p_FPdiffusion)
         return rhsFcn
 
 
-    def make_jacFcn(self, p_FPdrift, p_FPdiffusion, banded=False):
+    def make_jacFcn(self, p_FPdrift, p_FPdiffusion, sensivities=False, banded=False):
         """
         Generator for the ODEs jacobian.
         """
-        fokker_planck = FokkerPlanck()
-        jacFcn = lambda t,u: fokker_planck.FokkerPlanckODE_dfdu(t, u, self.Grid.h, self.FPdriftFcn, p_FPdrift, self.FPdiffusionFcn, p_FPdiffusion, banded)
-        return jacFcn
+        if sensivities:
+            raise(ValueError("Jacobian of VDE-augmented system is not implemented yet."))
+        
+        else:
+            fokker_planck = FokkerPlanck()
+            jacFcn = lambda t,u: fokker_planck.FokkerPlanckODE_dfdu(t, u, self.Grid.h, self.FPdriftFcn, p_FPdrift, self.FPdiffusionFcn, p_FPdiffusion, banded)
+            return jacFcn
 
 
     def importMeasurements(self, T, values, heatrate, ID=None, gridskip=1):
@@ -349,7 +367,7 @@ class Grid:
         self.N = len(gridT)
         
         if uniform is True:
-            self.h = ( gridT[-1] - gridT[0] ) / self.N
+            self.h = ( gridT[-1] - gridT[0] ) / (self.N-1)
         
         elif uniform is False:
             self.h = np.array([gridT[i+1] - gridT[i] for i in range(len(gridT)-1)])
@@ -357,7 +375,7 @@ class Grid:
         else:
             print("Warning: Grid.uniform must either be True or False! Assuming uniform grid.")
             self.uniform = True
-            self.h = ( gridT[-1] - gridT[0] ) / self.N
+            self.h = ( gridT[-1] - gridT[0] ) / (self.N-1)
 
 
 
@@ -426,12 +444,17 @@ class Integration:
     **NN, A, B**: Internal variables used by FokkerPlanckODE_dfdu.
     """
     # (TODO) Set default tolerances in Integration class (?)
-    def __init__(self, integrator=solve_ivp, method="BDF", banded_jac=False, options={}):
+    def __init__(self, integrator=solve_ivp, method="BDF", movgrid=False, update_grid=None, monitor=None, monitor_discrete=None, banded_jac=False, options={}):
         self.method     = method
         self.banded_jac = banded_jac
         self.options    = options
         self.integrator = integrator
-        self.NN         = None  # variables for FokkerPlanckODE_dfdu()
+        self.movgrid    = movgrid
+        self.update_grid= update_grid
+        self.monitor    = monitor
+        self.monitor_discrete = monitor_discrete
+        self.fixed_steps= 10
+        self.NN         = None  # variables for FokkerPlanckODE_dfdu(). DEV/NOTE: I think these are completely unused
         self.A          = None
         self.B          = None
 
@@ -450,5 +473,10 @@ class Integration:
         options["jac"] = jacobianFcn
         self.options = options
         return options
-        
+
+    @staticmethod
+    def defaultMonitorFcn(x, u_x, u_xx):
+        """ Default monitor function for the equidistribution grid."""
+        alpha = 1
+        return np.sqrt((alpha + abs(u_x(x)) + abs(u_xx(x))))
 
