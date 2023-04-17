@@ -231,7 +231,7 @@ class FokkerPlanck:
             # dfdu is required in banded form
             dfdu_dia = sparse.dia_matrix(dfdu)
             # LSODA fortran code seems to require one additional row
-            dfdu_banded = np.zeros((4,N))
+            dfdu_banded = np.zeros((4,self._NN))
             data = dfdu_dia.data
             offsets = dfdu_dia.offsets
 
