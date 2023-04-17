@@ -39,18 +39,29 @@ class InitialDistribution:
       paramCount    = len(psymbols)
 
       # generate functions and derivatives w.r.t. p (i.e. dfdp)
-      dfdp_sym = np.empty( (supportCount,paramCount) , dtype=object )
-      dfdp_fun = np.empty( (supportCount,paramCount) , dtype=object )
-      f_sym    = np.empty( supportCount              , dtype=object )
-      f_fun    = np.empty( supportCount              , dtype=object )
+      dfdp_sym  = np.empty( (supportCount,paramCount) , dtype=object )
+      dfdp_fun  = np.empty( (supportCount,paramCount) , dtype=object )
+      f_sym     = np.empty( supportCount              , dtype=object )
+      f_fun     = np.empty( supportCount              , dtype=object )
+      dfdx_sym  = np.empty( supportCount              , dtype=object )
+      dfdx_fun  = np.empty( supportCount              , dtype=object )
+      dfdxx_sym = np.empty( supportCount              , dtype=object )
+      dfdxx_fun = np.empty( supportCount              , dtype=object )
       for (j , fExpr) in enumerate(funcExprList):
          f_sym[j] = funcExprList[j]                                 # store symbolic function  
          f_fun[j] = self.sympy2numpyXP(f_sym[j], xsymbol, psymbols) # transform to function
+         symfun = sympy.diff(fExpr, xsymbol)                        # derivative w.r.t. x
+         dfdx_sym[j] = symfun
+         dfdx_fun[j] = self.sympy2numpyXP(symfun, xsymbol, psymbols)
+         symfun = sympy.diff(symfun, xsymbol)
+         dfdxx_sym[j] = symfun                                      # 2nd derivative w.r.t. x
+         dfdxx_fun[j] = self.sympy2numpyXP(symfun, xsymbol, psymbols)
          for (i, p) in enumerate(psymbols):
             symfun = sympy.diff(fExpr, p)                                 # derivative w.r.t. p_i
             dfdp_sym[j,i] = symfun                                        # store symbolic function
             dfdp_fun[j,i] = self.sympy2numpyXP(symfun, xsymbol, psymbols) # transform to function
-
+      
+      
       # transform the support into support functions
       for (j, support) in enumerate(supportList):
          (l,r) = support               # extract left and right
@@ -67,10 +78,14 @@ class InitialDistribution:
       self.xsymbol       = xsymbol
       self.supportCount  = supportCount
       self.paramCount    = paramCount
-      self.f_fun    = f_fun
-      self.f_sym    = f_sym
-      self.dfdp_fun = dfdp_fun
-      self.dfdp_sym = dfdp_sym
+      self.f_fun     = f_fun
+      self.f_sym     = f_sym
+      self.dfdx_fun  = dfdx_fun
+      self.dfdx_sym  = dfdx_sym
+      self.dfdxx_fun = dfdxx_fun
+      self.dfdxx_sym = dfdxx_sym
+      self.dfdp_fun  = dfdp_fun
+      self.dfdp_sym  = dfdp_sym
 
       # generate evaluator functions
       return None
@@ -142,6 +157,42 @@ class InitialDistribution:
          support = self.evalSupport(support, p)                  #   evaluate support functions
          (xx, idx) = self.getValuesWithinInterval( x , support ) #   get x-values in current support
          fvals[idx] = self.f_fun[j]( xx , p )                    #   evaluate function
+      return fvals
+   
+
+   def dfdx(self, x, p):
+      """Evaluates first x-derivative of nominal function at x with parameter vector p.
+      ## Takes
+      **x**: numpy vector <br>
+      **p**: numpy vector
+      
+      
+      ## Returns:
+      **dfdx**: numpy vector 
+      """
+      fvals = np.zeros_like(x)
+      for (j,support) in enumerate( self.supportList ):          # walk through the individual functions
+         support = self.evalSupport(support, p)                  #   evaluate support functions
+         (xx, idx) = self.getValuesWithinInterval( x , support ) #   get x-values in current support
+         fvals[idx] = self.dfdx_fun[j]( xx , p )                    #   evaluate function
+      return fvals
+
+
+   def dfdxx(self, x, p):
+      """Evaluates second x-derivative of nominal function at x with parameter vector p.
+      ## Takes
+      **x**: numpy vector <br>
+      **p**: numpy vector
+      
+      
+      ## Returns:
+      **dfdxx**: numpy vector 
+      """
+      fvals = np.zeros_like(x)
+      for (j,support) in enumerate( self.supportList ):          # walk through the individual functions
+         support = self.evalSupport(support, p)                  #   evaluate support functions
+         (xx, idx) = self.getValuesWithinInterval( x , support ) #   get x-values in current support
+         fvals[idx] = self.dfdxx_fun[j]( xx , p )                    #   evaluate function
       return fvals
 
 
