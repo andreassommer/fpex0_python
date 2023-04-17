@@ -5,7 +5,6 @@ import sympy
 
 from fpex0.setup import Setup, Parameters, Grid, Integration
 from fpex0 import FokkerPlanck
-# from fpex0.default import defaultDiffusionFcn, defaultDriftFcn
 
 from fpex0.InitialDistribution import InitialDistribution
 
@@ -79,10 +78,10 @@ def exampleSetup(int_method='BDF'):
     FraserSuzuki_support = (-np.inf, FraserSuzuki_zeropos)
     
     FraserSuzuki = InitialDistribution(FraserSuzuki_expr, FraserSuzuki_support, FraserSuzuki_params, name=FraserSuzuki_name)
-    IniDistFcn     = lambda x,p: FraserSuzuki.f(x,p)
 
     # Setup integrator (using defaults)
-    integrationObj = Integration(method=int_method)
+    defaultMonitorFcn = Integration.defaultMonitorFcn
+    integrationObj = Integration(method=int_method, monitor=defaultMonitorFcn)
     
     # LSODA needs the jacobian in banded form (cf. scipy ode docs)
     if int_method=='LSODA':
@@ -93,7 +92,7 @@ def exampleSetup(int_method='BDF'):
     
 
     # generate the setup object
-    FPEX0setup = Setup(gridObj, parametersObj, integrationObj, FPdriftFcn, FPdiffusionFcn, IniDistFcn)
+    FPEX0setup = Setup(gridObj, parametersObj, integrationObj, FraserSuzuki, FPdriftFcn, FPdiffusionFcn)
 
     return FPEX0setup
 
