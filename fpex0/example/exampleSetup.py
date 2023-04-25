@@ -9,7 +9,7 @@ from fpex0 import FokkerPlanck
 from fpex0.InitialDistribution import InitialDistribution
 
 
-def exampleSetup(int_method='BDF'):
+def exampleSetup(int_method='RK45'):
     """
     Generates example setup for FPEX0.
 
@@ -59,7 +59,7 @@ def exampleSetup(int_method='BDF'):
                                     p_ub_FPdrift, p_ub_FPdiffusion, p_ub_iniDist  )
 
     # Generate grid
-    N        = 1001  # space resolution
+    N        = 201 #1001 # space resolution
 
     betamax  = 20   # maximum heat rate
     gridT    = np.linspace( 60,      160,  N )   # x-grid = temperatures
@@ -67,8 +67,10 @@ def exampleSetup(int_method='BDF'):
     gridObj  = Grid(gridT, gridTdot)
 
     # set the FP functions and the initial distribution
-    FPdriftFcn     = lambda t,p: FokkerPlanck.defaultDriftFcn(t,p)
-    FPdiffusionFcn = lambda t,p: FokkerPlanck.defaultDiffusionFcn(t,p,betamax)
+    FPdriftFcn        = lambda t,p: FokkerPlanck.defaultDriftFcn(t,p)
+    FPdiffusionFcn    = lambda t,p: FokkerPlanck.defaultDiffusionFcn(t,p,betamax)
+    FPdriftFcn_p      = lambda t,p: FokkerPlanck.defaultDriftFcn_p(t, p)
+    FPdiffusionFcn_p  = lambda t,p: FokkerPlanck.defaultDiffusionFcn_p(t,p,betamax)
 
     # Fraser-Suzuki -> uses functions to describe the support
     FraserSuzuki_name   = "Fraser-Suzuki"
@@ -92,7 +94,8 @@ def exampleSetup(int_method='BDF'):
     
 
     # generate the setup object
-    FPEX0setup = Setup(gridObj, parametersObj, integrationObj, FraserSuzuki, FPdriftFcn, FPdiffusionFcn)
+    FPEX0setup = Setup( gridObj, parametersObj, integrationObj, FraserSuzuki, 
+                        FPdriftFcn, FPdiffusionFcn, FPdriftFcn_p, FPdiffusionFcn_p)
 
     return FPEX0setup
 

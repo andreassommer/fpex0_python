@@ -1,7 +1,7 @@
+import time
+
 from fpex0 import fpex0
 from fpex0.example.exampleSetup import exampleSetup, importExampleMeasurements
-
-import time
 
 
 def exampleFit(method):
@@ -39,4 +39,4 @@ def exampleFit(method):
     print(f"Solution found: p = {fit.x}")
 
 if __name__=='__main__':
-    exampleFit('BDF')
+    exampleFit('RK45')
