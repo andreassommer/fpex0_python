@@ -6,7 +6,7 @@ from scipy import optimize
 import time
 
 
-def simulate(FPEX0setup, pvec, odeoptions={}, sensivities=False):
+def simulate(FPEX0setup, pvec, odeoptions={}, sensitivities=False):
     """
     Simulates Fokker-Planck with specified parameters for FP drift, diffusion, and initial function.
 
@@ -56,8 +56,8 @@ def simulate(FPEX0setup, pvec, odeoptions={}, sensivities=False):
     
     # generate right hand side, jacobian
     # insert control flow to compute either the nominal solution, the jacobian or both
-    FPrhs         = FPEX0setup.make_rhsFcn(p_FPdrift, p_FPdiffusion, sensivities)
-    FPjac         = FPEX0setup.make_jacFcn(p_FPdrift, p_FPdiffusion, sensivities, FPEX0setup.Integration.banded_jac)
+    FPrhs         = FPEX0setup.make_rhsFcn(p_FPdrift, p_FPdiffusion, sensitivities)
+    FPjac         = FPEX0setup.make_jacFcn(p_FPdrift, p_FPdiffusion, sensitivities, FPEX0setup.Integration.banded_jac)
 
     # setup integrator and update options, jacobian therein
     integrator  = FPEX0setup.Integration.integrator
@@ -67,11 +67,14 @@ def simulate(FPEX0setup, pvec, odeoptions={}, sensivities=False):
     odeoptions  = FPEX0setup.Integration.updateJacobian(FPjac)
     
     # if sensivities are requested, the initial condition u0 has to be augmented
-    if sensivities:
-        dy0dp = lambda x,p: FPEX0setup.IniDist.dfdp(x, p)
-        Gp0 = dy0dp(gridT, p_IC)
-        u0 = np.append(u0, Gp0)
-
+    if sensitivities:
+        dy0dp = FPEX0setup.IniDist.dfdp(gridT, p_IC) # we received a gradient (matrix as we have requested several points)
+        dy0dp = np.transpose(dy0dp)                  # gradients --> jacobian
+        nu = len(gridT)     # size of the system's nominal part
+        np_FP = len(p_FPdrift) + len(p_FPdiffusion)
+        Gp0 = np.column_stack( (np.zeros((nu,np_FP)), dy0dp) ) # assemble jacobian. is zero for the params y0 does not depend on (FP params)
+        u0 = np.append(u0, Gp0.flatten(order='F'))             # order='F': flatten in column-major order
+    
     # start integration
     try:
         sTime = time.time()
@@ -122,14 +125,18 @@ def fit(FPEX0setup, optimizer='lsq'):
     if optimizer.lower() == 'lsq':
         lsq_opts = {}
         # set options
-        lsq_opts["jac"] = jac
+        if FPEX0setup.Integration.vde:
+            lsq_opts["jac"] = jac
+        else:
+            lsq_opts["jac"] = "3-point"
+
         lsq_opts["max_nfev"]                    = 100000    # max function evaluations
                                                             # tolerances
-        lsq_opts["xtol"]                        = 1e-6      # x-step
-        lsq_opts["ftol"]                        = 1e-10     # function-step
-        lsq_opts["gtol"]                        = 1.0       # norm of gradient, quite high, but okay for FD
+        lsq_opts["xtol"]                        = 1e-10      # x-step
+        lsq_opts["ftol"]                        = 1e-20     # function-step
+        lsq_opts["gtol"]                        = 1e-4       # norm of gradient, quite high, but okay for FD
 
-        lsq_opts["x_scale"]                     = 'jac'     # let set scipy set scale with jacobian
+        lsq_opts["x_scale"]                     = 'jac'     # let scipy set scale with jacobian
         lsq_opts["verbose"]                     = 2         # give detailed progress information
         result = optimize.least_squares(resvecfun, p_0, bounds=(p_lb, p_ub), **lsq_opts)
         
@@ -186,7 +193,7 @@ def residual(FPEX0setup, p_all):
         # get corresponding measurement and simulation data
         measVals    = meas_values[k][idxMeas]
         simVals     = simdata[idxGrid, k]
-        resvec   = np.append(resvec, measVals - simVals)
+        resvec   = np.append(resvec, simVals - measVals)
 
     return resvec
 
@@ -209,8 +216,8 @@ def jacobian(FPEX0setup, p_all):
     # evaluate at measurement rates
     simdata = sol.sol(meas_rates)
     # extract sensitivities
-    np = len(p_all)
-    nu = len(sol.sol(grid_T[0]))//(np+1) # one nominal solution + for every parameter the sensivity (dy/dp)
+    n_p = len(p_all)
+    nu = len(sol.sol(grid_T[0]))//(n_p+1) # one nominal solution + for every parameter the sensivity (dy/dp)
     sensitivitydata = simdata[nu:,:]
 
     # residual
@@ -225,7 +232,7 @@ def jacobian(FPEX0setup, p_all):
             
             # get sensivity data corresponding to measurements
             sensVals = sensitivitydata[idxGrid+i*nu, k]
-            np.append(dres_dp, sensVals)
+            dres_dp = np.append(dres_dp, sensVals)
 
         jac.append(dres_dp)
     jac = np.column_stack(jac)

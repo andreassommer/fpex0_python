@@ -1,4 +1,5 @@
 from copy import copy
+import warnings
 
 import numpy as np
 from scipy.integrate import solve_ivp
@@ -94,27 +95,28 @@ class Setup:
         self.Measurements   = Measurements()
 
 
-    def make_rhsFcn(self, p_FPdrift, p_FPdiffusion, sensivities=False):
+    def make_rhsFcn(self, p_FPdrift, p_FPdiffusion, sensitivities=False):
         """
         Generator for the ODEs right-hand-side.
         """
-        if sensivities:
+        if sensitivities:
             n_p = len(self.Parameters.p0)
             fokker_planck_vde = FokkerPlanckVDE()
             rhsFcn = lambda t, uu: fokker_planck_vde.FokkerPlanckVDE_ODE(t, uu, self.Grid.h, 
-                self.driftFcn, self.driftFcn_p, self.driftParams, self.diffusionFcn, self.diffusionFcn_p, self.diffusionParams, n_p)
+                self.FPdriftFcn, self.FPdriftFcn_p, p_FPdrift, self.FPdiffusionFcn, self.FPdiffusionFcn_p, p_FPdiffusion, n_p)
 
         else:
-            rhsFcn = lambda t, u: FokkerPlanck.FokkerPlanckODE(t, u, self.Grid.h, self.FPdriftFcn, p_FPdrift, self.FPdiffusionFcn, p_FPdiffusion)
+            rhsFcn = lambda t, u: FokkerPlanck.FokkerPlanckODE(t, u, self.Grid.h, 
+                                                               self.FPdriftFcn, p_FPdrift, self.FPdiffusionFcn, p_FPdiffusion)
         return rhsFcn
 
 
-    def make_jacFcn(self, p_FPdrift, p_FPdiffusion, sensivities=False, banded=False):
+    def make_jacFcn(self, p_FPdrift, p_FPdiffusion, sensitivities=False, banded=False):
         """
         Generator for the ODEs jacobian.
         """
-        if sensivities:
-            raise(ValueError("Jacobian of VDE-augmented system is not implemented yet."))
+        if sensitivities:
+            warnings.warn("Jacobian of VDE-augmented system is not implemented yet.")
         
         else:
             fokker_planck = FokkerPlanck()
@@ -444,19 +446,20 @@ class Integration:
     **NN, A, B**: Internal variables used by FokkerPlanckODE_dfdu.
     """
     # (TODO) Set default tolerances in Integration class (?)
-    def __init__(self, integrator=solve_ivp, method="BDF", movgrid=False, update_grid=None, monitor=None, monitor_discrete=None, banded_jac=False, options={}):
-        self.method     = method
-        self.banded_jac = banded_jac
-        self.options    = options
-        self.integrator = integrator
-        self.movgrid    = movgrid
-        self.update_grid= update_grid
-        self.monitor    = monitor
+    def __init__(self, integrator=solve_ivp, method="BDF", vde=True, movgrid=False, update_grid=None, monitor=None, monitor_discrete=None, banded_jac=False, options={}):
+        self.method        = method
+        self.banded_jac    = banded_jac
+        self.options       = options
+        self.integrator    = integrator
+        self.vde           = vde
+        self.movgrid       = movgrid
+        self.update_grid   = update_grid
+        self.monitor       = monitor
         self.monitor_discrete = monitor_discrete
-        self.fixed_steps= 10
-        self.NN         = None  # variables for FokkerPlanckODE_dfdu(). DEV/NOTE: I think these are completely unused
-        self.A          = None
-        self.B          = None
+        self.fixed_steps   = 10
+        self.NN            = None  # variables for FokkerPlanckODE_dfdu(). DEV/NOTE: I think these are completely unused
+        self.A             = None
+        self.B             = None
 
     def updateOptions(self, newOptions):
         """ Returns the integrators options. """

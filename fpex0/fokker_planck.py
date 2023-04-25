@@ -29,8 +29,8 @@ class FokkerPlanck:
                 # 2nd order stencil + robin boundary
                 self._B = sparse.dia_matrix(( np.array([e1/h**2, -2*e1/h**2,  e1/h**2]), [-1,0,1] ), shape=(N, N))
                 self._B = sparse.csr_matrix(self._B)
-                self._B[0,  1  ] = 2
-                self._B[N-1,N-2] = 2
+                self._B[0,  1  ] = 2/h**2
+                self._B[N-1,N-2] = 2/h**2
                 self._NN = N
             
             # non-uniform grid
@@ -131,9 +131,9 @@ class FokkerPlanck:
 
                 # inner nodes (remember: python slicing is exclusive right)
                 i = np.arange(1,N-1)
-                #Au[i] = ( u[i+1] - u[i-1] ) / (2*h)           # 1st derivative central stencil
+                Au[i] = ( u[i+1] - u[i-1] ) / (2*h)           # 1st derivative central stencil
                 #Au[i] = ( u[i+1] - u[i] ) / (h)               # 1st derivative forward stencil
-                Au[i] = ( u[i] - u[i-1] ) / (h)               # 1st derivative backward stencil
+                #Au[i] = ( u[i] - u[i-1] ) / (h)               # 1st derivative backward stencil
                 Bu[i] = ( u[i-1] - 2*u[i] + u[i+1] ) / h**2   # 2nd derivative central stencil
 
                 # last node
@@ -248,7 +248,7 @@ class FokkerPlanck:
 
     def FokkerPlanckODE_dfdp_FP(self, t, u, h, driftFcn_p, driftParams, diffusionFcn_p, diffusionParams):
         # dimensions
-        n = len(u)
+        nu = len(u)
         np_FP = len(driftParams) + len(diffusionParams)
 
         # prepare variables
@@ -257,20 +257,25 @@ class FokkerPlanck:
         D_p     = diffusionFcn_p(t, diffusionParams)
 
         # preallocate
-        dfdp_FP = np.zeros((n, np_FP))
+        dfdp_FP = np.zeros((nu, np_FP))
 
         # precompute
         A, B = self.FD_stencils(u, h)
-        Au = A@u
-        Bu = B@u
+        _u = sparse.csr_array(u.reshape((nu,1)))
+        Au = (A@_u).todense() # A*u (dense)
+        Bu = (B@_u).todense() # B*u (dense)
         
+        # todense returns 2D-arrays, so we also have to reshape
+        Au = Au.flatten()
+        Bu = Bu.flatten()
+
         # compute entries
         np_dr = len(driftParams)
         for i in range(np_dr):
-            dfdp_FP[:,i] = -alpha_p[i]*Au
+            dfdp_FP[:,i] = -alpha_p[i]*Au # drift columns
 
         for i in range(np_dr, np_FP):
-            dfdp_FP[:,i] = D_p[i]*Bu
+            dfdp_FP[:,i] = D_p[i-np_dr]*Bu # diffusion columns
 
         return dfdp_FP
 
@@ -321,4 +326,26 @@ class FokkerPlanck:
         # linear parametrization ensuring non-negativity for non-negative p1 and p2
         fval = p[0] + t * (p[1] - p[0]) / betamax
 
+        return fval
+    
+    
+    @staticmethod
+    def defaultDriftFcn_p(t, p):
+        """
+        Docs.
+        """
+        fval1 = 1
+        fval2 = t
+        fval = np.array([fval1, fval2]) # jacobian w.r.t. drift (!) parameters
+        return fval
+
+
+    @staticmethod
+    def defaultDiffusionFcn_p(t, p, betamax):
+        """
+        Docs.
+        """
+        fval1 = 1 - t/betamax
+        fval2 =     t/betamax
+        fval = np.array([fval1, fval2]) # jacobian w.r.t. diffusion (!) parameters
         return fval
